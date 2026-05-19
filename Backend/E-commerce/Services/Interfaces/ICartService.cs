@@ -12,10 +12,10 @@ namespace E_commerce.Services.Interfaces
         Task<bool> AddItemAsync(Guid userId, AddCartItem dto);
 
         // Update quantity của cart item
-        Task<bool> UpdateItemAsync(Guid itemId, UpdateCartItem dto);
+        Task<bool> UpdateItemAsync(UpdateCartItem dto);
 
         // Xóa cart item
-        Task<bool> DeleteItemAsync(Guid itemId);
+        Task<bool> DeleteItemAsync(Guid productVariantId);
 
         // Xóa toàn bộ cart
         Task<bool> ClearCartAsync(Guid userId);

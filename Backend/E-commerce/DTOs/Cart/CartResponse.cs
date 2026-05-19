@@ -8,5 +8,8 @@
 
         // Danh sách cart items
         public List<CartItemDto> Items { get; set; } = new();
+
+        // Tổng tiền của giỏ hàng 
+        public decimal TotalPrice {  get; set; }
     }
 }
