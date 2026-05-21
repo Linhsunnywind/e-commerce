@@ -27,7 +27,6 @@ namespace E_commerce.Models
 
         [ForeignKey("RoleId")]
         public virtual Role? Role { get; set; }
-        public bool IsDeleted { get; set; } = false;
 
         public virtual Cart Cart { get; set; }
 
