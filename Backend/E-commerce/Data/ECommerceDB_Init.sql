@@ -64,6 +64,7 @@ CREATE TABLE [Users] (
     [CreatedDate] datetime2        NOT NULL DEFAULT GETDATE(),
     [totalSpend]  decimal(18,2)    NOT NULL DEFAULT 0,
     [RoleId]      uniqueidentifier NOT NULL,
+    [IsDeleted]   bit              NOT NULL DEFAULT 0,
     CONSTRAINT [PK_Users] PRIMARY KEY ([Id]),
     CONSTRAINT [FK_Users_Roles] FOREIGN KEY ([RoleId]) REFERENCES [Roles]([Id])
 );
@@ -252,18 +253,21 @@ GO
 
 -- USERS: 1 Admin + 4 Staff + 6 Customer
 -- Password lưu plain-text, hash bằng BCrypt ở Phase 3
-INSERT INTO [Users] ([Id], [Name], [Password], [Email], [FullName], [PhoneNumber], [CreatedDate], [totalSpend], [RoleId]) VALUES
-    ('03000001-0000-0000-0000-000000000000', 'admin',        'Admin@123',    'admin@shop.com',        N'Admin Shop',     '0000000000', '2022-01-01', 0,        '11111111-1111-1111-1111-111111111111'),
-    ('03000002-0000-0000-0000-000000000000', 'dinhvangiang', 'Staff@123',    'dinhvangiang@shop.com', N'Đinh Văn Giang', '0967890123', '2022-05-10', 0,        '22222222-2222-2222-2222-222222222222'),
-    ('03000003-0000-0000-0000-000000000000', 'ngothiha',     'Staff@123',    'ngothiha@shop.com',     N'Ngô Thị Hà',     '0978901234', '2022-08-15', 0,        '22222222-2222-2222-2222-222222222222'),
-    ('03000004-0000-0000-0000-000000000000', 'trinhminhich', 'Staff@123',    'trinhminhich@shop.com', N'Trịnh Minh Ích', '0989012345', '2023-01-20', 0,        '22222222-2222-2222-2222-222222222222'),
-    ('03000005-0000-0000-0000-000000000000', 'buithikim',    'Staff@123',    'buithikim@shop.com',    N'Bùi Thị Kim',    '0990123456', '2023-07-01', 0,        '22222222-2222-2222-2222-222222222222'),
-    ('03000006-0000-0000-0000-000000000000', 'nguyenvanan',  'Customer@123', 'nguyenvanan@gmail.com', N'Nguyễn Văn An',  '0901234567', '2023-03-15', 45600000, '33333333-3333-3333-3333-333333333333'),
-    ('03000007-0000-0000-0000-000000000000', 'tranthibich',  'Customer@123', 'tranthibich@gmail.com', N'Trần Thị Bích',  '0912345678', '2023-06-20', 28900000, '33333333-3333-3333-3333-333333333333'),
-    ('03000008-0000-0000-0000-000000000000', 'leminhcuong',  'Customer@123', 'leminhcuong@gmail.com', N'Lê Minh Cường',  '0923456789', '2023-09-10', 67800000, '33333333-3333-3333-3333-333333333333'),
-    ('03000009-0000-0000-0000-000000000000', 'phamthudung',  'Customer@123', 'phamthudung@gmail.com', N'Phạm Thu Dung',  '0934567890', '2024-01-05', 15200000, '33333333-3333-3333-3333-333333333333'),
-    ('03000010-0000-0000-0000-000000000000', 'hoangducem',   'Customer@123', 'hoangducem@gmail.com',  N'Hoàng Đức Em',   '0945678901', '2024-02-18',  6990000, '33333333-3333-3333-3333-333333333333'),
-    ('03000011-0000-0000-0000-000000000000', 'vothiphuong',  'Customer@123', 'vothiphuong@gmail.com', N'Võ Thị Phương',  '0956789012', '2023-11-30', 38500000, '33333333-3333-3333-3333-333333333333');
+INSERT INTO [Users] ([Id], [Name], [Password], [Email], [FullName], [PhoneNumber], [CreatedDate], [totalSpend], [RoleId], [IsDeleted]) VALUES
+    /*Admin pass: Admin@123 */
+    ('03000001-0000-0000-0000-000000000000', 'admin',        '$2a$11$32bqO8TCC6vsw13lwlqF9.BulFvsC/SnDcQqSK7DVvKQqkXVVycVC',    'admin@shop.com',        N'Admin Shop',     '0000000000', '2022-01-01', 0,        '11111111-1111-1111-1111-111111111111',0),
+    /*Staff pass: Staff@123 */
+    ('03000002-0000-0000-0000-000000000000', 'dinhvangiang', '$2a$11$ezz5jur0577zKjXK.8wbEeAoKaRCD9kM3fPFHK4b7f5GzZMyREkY.',    'dinhvangiang@shop.com', N'Đinh Văn Giang', '0967890123', '2022-05-10', 0,        '22222222-2222-2222-2222-222222222222',0),
+    ('03000003-0000-0000-0000-000000000000', 'ngothiha',     '$2a$11$ezz5jur0577zKjXK.8wbEeAoKaRCD9kM3fPFHK4b7f5GzZMyREkY.',    'ngothiha@shop.com',     N'Ngô Thị Hà',     '0978901234', '2022-08-15', 0,        '22222222-2222-2222-2222-222222222222',0),
+    ('03000004-0000-0000-0000-000000000000', 'trinhminhich', '$2a$11$ezz5jur0577zKjXK.8wbEeAoKaRCD9kM3fPFHK4b7f5GzZMyREkY.',    'trinhminhich@shop.com', N'Trịnh Minh Ích', '0989012345', '2023-01-20', 0,        '22222222-2222-2222-2222-222222222222',0),
+    ('03000005-0000-0000-0000-000000000000', 'buithikim',    '$2a$11$ezz5jur0577zKjXK.8wbEeAoKaRCD9kM3fPFHK4b7f5GzZMyREkY.',    'buithikim@shop.com',    N'Bùi Thị Kim',    '0990123456', '2023-07-01', 0,        '22222222-2222-2222-2222-222222222222',0),
+    /*Customer pass: Customer@123 */
+    ('03000006-0000-0000-0000-000000000000', 'nguyenvanan',  '$2a$11$36XTo6G.9ZDcEDc7WMbnmuTLhLUDF8tYgtx2co699f2M/bn12JHKq', 'nguyenvanan@gmail.com', N'Nguyễn Văn An',  '0901234567', '2023-03-15', 45600000, '33333333-3333-3333-3333-333333333333',0),
+    ('03000007-0000-0000-0000-000000000000', 'tranthibich',  '$2a$11$36XTo6G.9ZDcEDc7WMbnmuTLhLUDF8tYgtx2co699f2M/bn12JHKq', 'tranthibich@gmail.com', N'Trần Thị Bích',  '0912345678', '2023-06-20', 28900000, '33333333-3333-3333-3333-333333333333',0),
+    ('03000008-0000-0000-0000-000000000000', 'leminhcuong',  '$2a$11$36XTo6G.9ZDcEDc7WMbnmuTLhLUDF8tYgtx2co699f2M/bn12JHKq', 'leminhcuong@gmail.com', N'Lê Minh Cường',  '0923456789', '2023-09-10', 67800000, '33333333-3333-3333-3333-333333333333',0),
+    ('03000009-0000-0000-0000-000000000000', 'phamthudung',  '$2a$11$36XTo6G.9ZDcEDc7WMbnmuTLhLUDF8tYgtx2co699f2M/bn12JHKq', 'phamthudung@gmail.com', N'Phạm Thu Dung',  '0934567890', '2024-01-05', 15200000, '33333333-3333-3333-3333-333333333333',0),
+    ('03000010-0000-0000-0000-000000000000', 'hoangducem',   '$2a$11$36XTo6G.9ZDcEDc7WMbnmuTLhLUDF8tYgtx2co699f2M/bn12JHKq', 'hoangducem@gmail.com',  N'Hoàng Đức Em',   '0945678901', '2024-02-18',  6990000, '33333333-3333-3333-3333-333333333333',0),
+    ('03000011-0000-0000-0000-000000000000', 'vothiphuong',  '$2a$11$36XTo6G.9ZDcEDc7WMbnmuTLhLUDF8tYgtx2co699f2M/bn12JHKq', 'vothiphuong@gmail.com', N'Võ Thị Phương',  '0956789012', '2023-11-30', 38500000, '33333333-3333-3333-3333-333333333333',0);
 GO
 
 -- VOUCHERS (5)
@@ -516,8 +520,3 @@ GO
 -- Sửa đường dẫn rồi bỏ comment để backup:
 -- BACKUP DATABASE ECommerceDB TO DISK = 'D:\Backup\ECommerceDB.bak' WITH FORMAT, NAME = 'ECommerceDB Full Backup';
 -- GO
-
-
-ALTER TABLE [Users]
-ADD [IsDeleted] bit NOT NULL DEFAULT 0;
-GO

@@ -11,12 +11,12 @@ namespace E_commerce.Services
     public class LoginService : ILoginService
     {
         private readonly IUserRepository _userRepository;
-        private readonly ITokenService _tokenService;
+        private readonly IJwtService _jwtService;
 
-        public LoginService(IUserRepository userRepository, ITokenService tokenService)
+        public LoginService(IUserRepository userRepository, IJwtService jwtService)
         {
             _userRepository = userRepository;
-            _tokenService = tokenService;
+            _jwtService = jwtService;
         }   
 
         public async Task<ServiceResponse<LoginResponse>> LoginAsync(LoginRequestDTO dto)
@@ -36,7 +36,7 @@ namespace E_commerce.Services
             {
                 Email = user.Email,
                 RoleName = user.Role?.Name ?? "Customer",
-                Token = _tokenService.CreateToken(user)
+                Token = _jwtService.CreateToken(user)
             };
             response.IsSuccess = true;
             response.Message = "Login successful.";

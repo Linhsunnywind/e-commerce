@@ -12,7 +12,11 @@ namespace E_commerce.DTOs.Auth
         [Required(ErrorMessage = "Phone number can't be empty")]
         [StringLength(10, ErrorMessage = "Phone number must be exactly 10 digits")]
         public string PhoneNumber { get; set; } = string.Empty;
-        [Required, MinLength(6, ErrorMessage = "Password has at least 6 characters")]
+        
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(6, ErrorMessage = "Password has at least 6 characters")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$", 
+            ErrorMessage = "Password must contain at least one uppercase letter, one number and one special character")]
         public string Password { get; set; } = string.Empty;
     }
 }
