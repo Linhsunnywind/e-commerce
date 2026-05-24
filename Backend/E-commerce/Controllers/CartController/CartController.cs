@@ -36,7 +36,7 @@ namespace E_commerce.Controllers
         }
 
         // POST: /api/cart/items
-        [HttpPost("items")]
+        [HttpPost("add")]
         public async Task<IActionResult> AddItem(AddCartItem dto)
         {
             var userId = Guid.Parse(
@@ -52,13 +52,10 @@ namespace E_commerce.Controllers
         }
 
         // PUT: /api/cart/items/{id}
-        [HttpPut("items/{id}")]
-        public async Task<IActionResult> UpdateItem(
-            Guid id,
-            UpdateCartItem dto
-        )
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateItem(UpdateCartItem dto)
         {
-            var result = await _cartService.UpdateItemAsync(id, dto);
+            var result = await _cartService.UpdateItemAsync(dto);
 
             if (!result)
                 return BadRequest(BaseResponse<string>.Fail("Cannot update item"));
@@ -66,10 +63,10 @@ namespace E_commerce.Controllers
         }
 
         // DELETE: /api/cart/items/{id}
-        [HttpDelete("items/{id}")]
-        public async Task<IActionResult> DeleteItem(Guid id)
+        [HttpDelete("remove")]
+        public async Task<IActionResult> DeleteItem(Guid productVariantId)
         {
-            var result = await _cartService.DeleteItemAsync(id);
+            var result = await _cartService.DeleteItemAsync(productVariantId);
 
             if (!result)
                 return NotFound(BaseResponse<string>.Fail("Cart item not found", 404));

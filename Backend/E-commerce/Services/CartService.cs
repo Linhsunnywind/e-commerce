@@ -43,7 +43,8 @@ namespace E_commerce.Services.Implementations
                     ProductVariantName = ci.ProductVariant.Name,
                     Price = ci.ProductVariant.Price,
                     Quantity = ci.Quantity
-                }).ToList()
+                }).ToList(),
+                TotalPrice = cart.CartItems.Sum(ci => ci.Quantity * ci.ProductVariant.Price)
             };
         }
         // Thêm item vào cart
@@ -87,6 +88,9 @@ namespace E_commerce.Services.Implementations
             // Nếu item đã tồn tại -> cộng thêm quantity
             if (existingItem != null)
             {
+                // Kiểm tra tổng quantity có vượt stock không
+                if (existingItem.Quantity + dto.Quantity > variant.Quantity) return false;   
+
                 existingItem.Quantity += dto.Quantity;
             }
             else
@@ -108,12 +112,12 @@ namespace E_commerce.Services.Implementations
             return true;
         }
         // Update quantity của CartItem
-        public async Task<bool> UpdateItemAsync(Guid itemId, UpdateCartItem dto)
+        public async Task<bool> UpdateItemAsync(UpdateCartItem dto)
         {
             // Tìm CartItem theo Id
             var item = await _context.CartItems
                 .Include(ci => ci.ProductVariant)
-                .FirstOrDefaultAsync(ci => ci.Id == itemId);
+                .FirstOrDefaultAsync(ci => ci.ProductVariantId == dto.ProductVariantId);
 
             // Không tìm thấy item
             if (item == null)
@@ -133,11 +137,11 @@ namespace E_commerce.Services.Implementations
         }
 
         // Xóa CartItem
-        public async Task<bool> DeleteItemAsync(Guid itemId)
+        public async Task<bool> DeleteItemAsync(Guid productVariantId)
         {
             // Tìm CartItem
             var item = await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.Id == itemId);
+                .FirstOrDefaultAsync(ci => ci.ProductVariantId == productVariantId);
 
             // Không tìm thấy
             if (item == null)

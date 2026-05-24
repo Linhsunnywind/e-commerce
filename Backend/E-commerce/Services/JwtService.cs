@@ -1,4 +1,4 @@
-﻿using E_commerce.Models;
+using E_commerce.Models;
 using E_commerce.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -7,10 +7,10 @@ using System.Text;
 
 namespace E_commerce.Services
 {
-    public class TokenService : ITokenService
+    public class JwtService : IJwtService
     {
         private readonly IConfiguration _config;
-        public TokenService(IConfiguration config) => _config = config;
+        public JwtService(IConfiguration config) => _config = config;
 
         public string CreateToken(User user)
         {
