@@ -125,34 +125,37 @@ namespace E_commerce.Services
 
             if (request.Variants != null)
             {
-                var toDelete = product.ProductVariants
-                    .Where(v => !request.Variants.Any(r => r.Id == v.Id))
+                var requestedIds = request.Variants
+                    .Where(r => r.Id.HasValue)
+                    .Select(r => r.Id!.Value)
+                    .ToHashSet();
+
+                // Xóa các variant không còn trong request (dùng ExecuteDeleteAsync, bypass EF tracking)
+                var idsToDelete = product.ProductVariants
+                    .Where(v => !requestedIds.Contains(v.Id))
+                    .Select(v => v.Id)
                     .ToList();
-                _productRepository.RemoveVariants(toDelete);
+                await _productRepository.DeleteVariantsAsync(idsToDelete);
 
                 foreach (var variantRequest in request.Variants)
                 {
                     if (variantRequest.Id.HasValue)
                     {
-                        var existing = product.ProductVariants
-                            .FirstOrDefault(v => v.Id == variantRequest.Id.Value);
-                        if (existing != null)
-                        {
-                            existing.Name = variantRequest.Name;
-                            existing.Price = variantRequest.Price;
-                            existing.Quantity = variantRequest.Quantity;
-                        }
+                        // Update qua raw SQL, bypass EF change tracking
+                        await _productRepository.UpdateVariantAsync(
+                            variantRequest.Id.Value,
+                            variantRequest.Name,
+                            variantRequest.Price,
+                            variantRequest.Quantity);
                     }
                     else
                     {
-                        product.ProductVariants.Add(new ProductVariant
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = id,
-                            Name = variantRequest.Name,
-                            Price = variantRequest.Price,
-                            Quantity = variantRequest.Quantity
-                        });
+                        // Insert qua raw SQL, bypass EF ValueGeneratedOnAdd issue
+                        await _productRepository.InsertVariantAsync(
+                            Guid.NewGuid(), id,
+                            variantRequest.Name,
+                            variantRequest.Price,
+                            variantRequest.Quantity);
                     }
                 }
             }
@@ -167,9 +170,14 @@ namespace E_commerce.Services
                     ImageUrl = url
                 }).ToList();
             }
-
             await _productRepository.SaveChanges();
-            return MapToResponse(product);
+            var updated = await _productRepository.GetProductsQuery()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.ProductVariants)
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(p => p.Id == id);
+            return MapToResponse(updated ?? product);
         }
 
         public async Task<bool> DeleteProduct(Guid id)
@@ -178,8 +186,8 @@ namespace E_commerce.Services
             if (product == null)
                 throw new KeyNotFoundException($"Product {id} not found.");
 
-            _productRepository.DeleteProduct(product);
-            return await _productRepository.SaveChanges();
+            product.IsDeleted = true;
+            return await _productRepository.SaveChanges();;
         }
 
         

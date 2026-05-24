@@ -4,11 +4,12 @@ import { Badge, Dropdown, Input } from 'antd';
 import { ShoppingCartOutlined, UserOutlined, SearchOutlined, MenuOutlined } from '@ant-design/icons';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { categories } from '../../data/mockData';
+import { useCategories} from '../../context/CategoryContext';
 
 export default function Navbar() {
   const { totalItems } = useCart();
   const { user, logout } = useAuth();
+  const { categories } = useCategories();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,13 +21,14 @@ export default function Navbar() {
   const handleLogout = () => { logout(); navigate('/'); };
 
   const userMenuItems = [
-    ...(user?.role === 'admin' ? [{ key: 'admin', label: <Link to="/admin/dashboard">Admin Panel</Link> }] : []),
-    ...(user?.role === 'staff' ? [{ key: 'staff', label: <Link to="/staff/orders">Staff Panel</Link> }] : []),
+    ...(user?.roleName === 'Admin' ? [{ key: 'admin', label: <Link to="/admin/dashboard">Admin Panel</Link> }] : []),
+    ...(user?.roleName === 'Staff' ? [{ key: 'staff', label: <Link to="/staff/orders">Staff Panel</Link> }] : []),
     { key: 'account', label: <Link to="/account">Tài khoản</Link> },
     { key: 'orders', label: <Link to="/orders">Đơn hàng</Link> },
     { type: 'divider' },
     { key: 'logout', label: <span className="text-red-500" onClick={handleLogout}>Đăng xuất</span> },
   ];
+  console.log(user);
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
@@ -58,9 +60,9 @@ export default function Navbar() {
               <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
                 <button className="flex items-center gap-1.5 text-gray-700 hover:text-blue-600 transition-colors text-sm font-medium">
                   <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
-                    {user.name[0]}
+                    {user.name?.[0] ?? '?'}
                   </div>
-                  <span className="hide-mobile">{user.name.split(' ').slice(-1)[0]}</span>
+                  <span className="hide-mobile">{user.name?.split(' ').slice(-1)[0]}</span>
                 </button>
               </Dropdown>
             ) : (
@@ -85,7 +87,7 @@ export default function Navbar() {
           {categories.map(cat => (
             <Link
               key={cat.id}
-              to={`/products?category=${cat.id}`}
+              to={`/products?category=${cat.name}`}
               className="text-gray-600 hover:text-blue-600 whitespace-nowrap transition-colors"
               onClick={() => setMenuOpen(false)}
             >

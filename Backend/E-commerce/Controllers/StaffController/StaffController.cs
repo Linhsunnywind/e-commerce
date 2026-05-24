@@ -1,5 +1,6 @@
 ﻿using E_commerce.Data;
 using E_commerce.DTOs.Staff;
+using E_commerce.Helpers;
 using E_commerce.Services;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace E_commerce.Controllers.StaffController
 {
-    [Route("api/[controller]")]
+    [Route("api/staffs")]
     [ApiController]
     public class StaffController : ControllerBase
     {
@@ -21,7 +22,7 @@ namespace E_commerce.Controllers.StaffController
         public async Task<IActionResult> GetAll()
         {
             var result = await _staffService.GetAllStaff();
-            return Ok(result);
+            return Ok(BaseResponse<List<StaffResponse>>.Ok(result));
         }
 
         [HttpGet("{id}")]
@@ -30,9 +31,9 @@ namespace E_commerce.Controllers.StaffController
             var result = await _staffService.GetStaffById(id);
             if (result == null)
             {
-                return NotFound(result);
+                return NotFound(BaseResponse<StaffResponse>.Fail("Staff not found", 404));
             }
-            return Ok(result);
+            return Ok(BaseResponse<StaffResponse>.Ok(result));
         }
 
         [HttpPost]
@@ -41,23 +42,23 @@ namespace E_commerce.Controllers.StaffController
             var result = await _staffService.CreateStaff(staff);
             if (result != "Create successfully")
             {
-                return BadRequest(result);
+                return BadRequest(BaseResponse<string>.Fail(result));
             }
-            return StatusCode(201, result);
+            return StatusCode(201, BaseResponse<string>.Ok(null, "Create successfully"));
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, UpdateStaff staff)
         {
             var result = await _staffService.UpdateStaff(id, staff);
-            return Ok(result);
+            return Ok(BaseResponse<string>.Ok(null, result));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _staffService.DeleteStaff(id);
-            return Ok(result);
+            return Ok(BaseResponse<string>.Ok(null, result));
         }
     }
 }

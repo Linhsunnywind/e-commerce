@@ -18,6 +18,7 @@ namespace E_commerce.Services
         public async Task<List<CategoryResponse>> GetCategories()
         {
             return await _context.Categories
+                .Where(c => !c.IsDeleted)
                 .Select(c => new CategoryResponse
                 {
                     Id = c.Id,
@@ -70,7 +71,7 @@ namespace E_commerce.Services
             if (category == null)
                 throw new KeyNotFoundException("Category not found.");
 
-            _context.Categories.Remove(category);
+            category.IsDeleted = true;
 
             await _context.SaveChangesAsync();
         }

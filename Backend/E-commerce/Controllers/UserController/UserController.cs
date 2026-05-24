@@ -1,4 +1,5 @@
 ﻿using E_commerce.DTOs.User;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -32,10 +33,10 @@ namespace E_commerce.Controllers.UserController
             var result = await _adminUserService.CreateStaffOrAdminAsync(dto);
             if (result.IsSuccess)
             {
-                return Ok(result);
+                return Ok(BaseResponse<AdminCreateUserResponse>.Ok(result.Data, result.Message));
             }
 
-            return BadRequest(result);
+            return BadRequest(BaseResponse<AdminCreateUserResponse>.Fail(result.Message));
         }
 
         [Authorize(Roles = "Customer")]
@@ -49,8 +50,10 @@ namespace E_commerce.Controllers.UserController
             }
 
             var result = await _userService.GetProfileAsync(userId);
-            if (result.IsSuccess) return Ok(result);
-            return BadRequest(result);
+            if (result.IsSuccess) {
+                return Ok(BaseResponse<UserProfileResponse>.Ok(result.Data, result.Message));
+            }
+            return BadRequest(BaseResponse<UserProfileResponse>.Fail(result.Message));
         }
 
         [Authorize(Roles = "Customer")]
@@ -66,8 +69,26 @@ namespace E_commerce.Controllers.UserController
             }
 
             var result = await _userService.UpdateProfileAsync(userId, dto);
-            if (result.IsSuccess) return Ok(result);
-            return BadRequest(result);
+            if (result.IsSuccess) {
+                return Ok(BaseResponse<UserProfileResponse>.Ok(result.Data, result.Message));
+            }
+            return BadRequest(BaseResponse<UserProfileResponse>.Fail(result.Message));
+        }
+
+        [Authorize(Roles = "Customer")]
+        [HttpPut("password")]
+        public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out Guid userId))
+                return Unauthorized();
+
+            var result = await _userService.ChangePasswordAsync(userId, dto);
+            if (result.IsSuccess)
+                return Ok(BaseResponse<string>.Ok(result.Data, result.Message));
+            return BadRequest(BaseResponse<string>.Fail(result.Message));
         }
 
         [Authorize]
@@ -81,8 +102,10 @@ namespace E_commerce.Controllers.UserController
             }
 
             var result = await _userService.DeleteAccountAsync(userId);
-            if (result.IsSuccess) return Ok(result);
-            return BadRequest(result);
+            if (result.IsSuccess) {
+                return Ok(BaseResponse<string>.Ok(result.Data, result.Message));
+            }
+            return BadRequest(BaseResponse<string>.Fail(result.Message));
         }
     }
 }

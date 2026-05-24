@@ -14,8 +14,9 @@ namespace E_commerce.Repositories
         }
         public IQueryable<Product> GetProductsQuery()
         {
-            return _context.Products.AsNoTracking();
-        } // Chỉ đọc nội dung ( đọc đúng lần đầu tiên kh tiếp tục đọc sau đó )
+            return _context.Products.Where(p => !p.IsDeleted).AsNoTracking();
+        }
+
 
         public async Task<Product?> GetById(Guid id)
         {
@@ -38,6 +39,30 @@ namespace E_commerce.Repositories
         public void DeleteProduct(Product product)
         {
             _context.Remove(product);
+        }
+
+        public async Task UpdateVariantAsync(Guid id, string name, decimal price, int quantity)
+        {
+            await _context.ProductVariants
+                .Where(v => v.Id == id)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(v => v.Name, name)
+                    .SetProperty(v => v.Price, price)
+                    .SetProperty(v => v.Quantity, quantity));
+        }
+
+        public async Task InsertVariantAsync(Guid variantId, Guid productId, string name, decimal price, int quantity)
+        {
+            await _context.Database.ExecuteSqlAsync(
+                $"INSERT INTO ProductVariants (Id, ProductId, Name, Price, Quantity) VALUES ({variantId}, {productId}, {name}, {price}, {quantity})");
+        }
+
+        public async Task DeleteVariantsAsync(List<Guid> variantIds)
+        {
+            if (variantIds.Count == 0) return;
+            await _context.ProductVariants
+                .Where(v => variantIds.Contains(v.Id))
+                .ExecuteDeleteAsync();
         }
 
         public void RemoveVariants(List<ProductVariant> variants)

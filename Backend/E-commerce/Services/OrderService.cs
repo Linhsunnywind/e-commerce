@@ -1,8 +1,10 @@
-﻿using E_commerce.DTOs.Order;
+﻿using E_commerce.Data;
+using E_commerce.DTOs.Order;
 using E_commerce.Models;
 using E_commerce.Repositories;
 using E_commerce.Repositories.Interfaces;
 using E_commerce.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -14,16 +16,20 @@ namespace E_commerce.Services
         private readonly IProductVariantRepository _variantRepo;
         private readonly IVoucherRepository _voucherRepo;
         private readonly ICartService _cartService;
+        private readonly AppDbContext _context;
+
         public OrderService(
             IOrderRepository orderRepository,
             IProductVariantRepository variantRepository,
             IVoucherRepository voucherRepository,
-            ICartService cartService)
+            ICartService cartService,
+            AppDbContext context)
         {
             _orderRepo = orderRepository;
             _variantRepo = variantRepository;
             _voucherRepo = voucherRepository;
             _cartService = cartService;
+            _context = context;
         }
 
         public async Task<List<OrderResponse>> GetAllOrders()
@@ -45,9 +51,21 @@ namespace E_commerce.Services
         }
         public async Task<OrderResponse> CreateOrder(Guid userId, CreateOrderRequest request)
         {
+            // Lấy địa chỉ giao hàng và snapshot vào order
+            var addr = await _context.ShippingAddresses
+                .FirstOrDefaultAsync(sa => sa.Id == request.ShippingAddressId && sa.UserId == userId)
+                ?? throw new KeyNotFoundException("Shipping address not found.");
+
             var cart = await _cartService.GetCartAsync(userId);
             if (cart == null || !cart.Items.Any())
                 throw new InvalidOperationException("Cart is empty.");
+
+            var orderItems = (request.CartItemIds != null && request.CartItemIds.Count > 0)
+                ? cart.Items.Where(i => request.CartItemIds.Contains(i.Id)).ToList()
+                : cart.Items.ToList();
+
+            if (!orderItems.Any())
+                throw new InvalidOperationException("No valid items selected.");
 
             Voucher? voucher = null;
             if (!string.IsNullOrWhiteSpace(request.VoucherCode))
@@ -65,7 +83,7 @@ namespace E_commerce.Services
             decimal subTotal = 0;
             var itemSnapshots = new List<(ProductVariant variant, int quantity, decimal price)>();
 
-            foreach (var item in cart.Items)
+            foreach (var item in orderItems)
             {
                 var variant = await _variantRepo.GetById(item.ProductVariantId);
                 if (variant == null) throw new KeyNotFoundException($"Variant {item.ProductVariantId} not found.");
@@ -106,8 +124,10 @@ namespace E_commerce.Services
 
             var order = new Order
             {
-                UserId = userId,
-                ShippingAddress = request.ShippingAddress,
+                UserId          = userId,
+                ReceiverName    = addr.FullName,
+                ReceiverPhone   = addr.PhoneNumber,
+                ShippingAddress = $"{addr.Street}, {addr.Ward}, {addr.District}, {addr.Province}",
                 PaymentMethodId = request.PaymentMethodId,
                 VoucherId = voucher?.Id,
                 SubTotal = subTotal,
@@ -119,7 +139,10 @@ namespace E_commerce.Services
             await _orderRepo.AddOrder(order);
             await _orderRepo.SaveChanges();
 
-            await _cartService.ClearCartAsync(userId);
+            if (request.CartItemIds != null && request.CartItemIds.Count > 0)
+                await _cartService.RemoveItemsByIdsAsync(request.CartItemIds);
+            else
+                await _cartService.ClearCartAsync(userId);
             var saved = await _orderRepo.GetById(order.Id)
                 ?? throw new Exception("Failed to reload saved order.");
             return MapToResponse(saved);
@@ -168,6 +191,8 @@ namespace E_commerce.Services
             Id = order.Id,
             OrderDate = order.OrderDate,
             Status = order.Status,
+            ReceiverName = order.ReceiverName,
+            ReceiverPhone = order.ReceiverPhone,
             ShippingAddress = order.ShippingAddress,
             SubTotal = order.SubTotal,
             DiscountAmount = order.DiscountAmount,
@@ -179,6 +204,7 @@ namespace E_commerce.Services
             {
                 Id = od.Id,
                 ProductVariantId = od.ProductVariantId,
+                ProductName = od.ProductVariant?.Product?.Name ?? string.Empty,
                 VariantName = od.ProductVariant != null? od.ProductVariant.Name : string.Empty,
                 OrderQuantity = od.OrderQuantity,
                 UnitPrice = od.UnitPrice,

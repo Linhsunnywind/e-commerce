@@ -1,4 +1,5 @@
 ﻿using E_commerce.DTOs.Products;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ namespace E_commerce.Controllers
         public async Task<IActionResult> GetAll([FromQuery] ProductFilterRequest filter)
         {
             var result = await _productService.GetAll(filter);
-            return Ok(result);
+            return Ok(BaseResponse<PagedResponse<ProductResponse>>.Ok(result));
         }
 
         [HttpGet("{id:guid}")]
@@ -31,11 +32,11 @@ namespace E_commerce.Controllers
             try
             {
                 var result = await _productService.GetById(id);
-                return Ok(result);
+                return Ok(BaseResponse<ProductResponse>.Ok(result));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(BaseResponse<ProductResponse>.Fail(ex.Message, 404));
             }
         }
 
@@ -60,11 +61,11 @@ namespace E_commerce.Controllers
             try
             {
                 var result = await _productService.UpdateProduct(id, request);
-                return Ok(result);
+                return Ok(BaseResponse<ProductResponse>.Ok(result));
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(BaseResponse<ProductResponse>.Fail(ex.Message, 404));
             }
         }
 
@@ -79,7 +80,7 @@ namespace E_commerce.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(BaseResponse<string>.Fail(ex.Message, 404));
             }
         }
     }

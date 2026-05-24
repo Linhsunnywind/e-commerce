@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using E_commerce.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,7 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 // Services
 builder.Services.AddScoped<ISupportService, SupportService>();
+builder.Services.AddScoped<IShippingAddressService, ShippingAddressService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductVariantService, ProductVariantService>();
@@ -48,6 +50,16 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
+var cloudinarySettings = builder.Configuration
+    .GetSection("Cloudinary")
+    .Get<CloudinarySettings>()!;
+
+var account = new CloudinaryDotNet.Account(
+    cloudinarySettings.CloudName,
+    cloudinarySettings.ApiKey,
+    cloudinarySettings.ApiSecret);
+
+builder.Services.AddSingleton(new CloudinaryDotNet.Cloudinary(account));
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]!;

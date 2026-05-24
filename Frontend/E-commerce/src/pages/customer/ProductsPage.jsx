@@ -2,42 +2,43 @@ import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Select, Button, Rate, Empty, Radio, InputNumber, Card } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
-import { categories, formatPrice } from '../../data/mockData';
 import { useProducts } from '../../context/ProductContext';
+import { useCategories } from '../../context/CategoryContext'
 
 export default function ProductsPage() {
+  const { categories } = useCategories();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const formatPrice = (p) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
 
-  const categoryId = searchParams.get('category') ? Number(searchParams.get('category')) : null;
+  const categoryParam = searchParams.get('category') || '';
   const query = searchParams.get('q') || '';
 
   const [sort, setSort] = useState('default');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
-  const [brand, setBrand] = useState('');
+  const [brandName, setbrandName] = useState('');
   const { products } = useProducts();
 
-  const brands = [...new Set(products.map(p => p.brand))];
+  const brandNames = [...new Set(products.map(p => p.brandName))];
 
   const filtered = useMemo(() => {
     let list = [...products];
-    if (categoryId) list = list.filter(p => p.categoryId === categoryId);
-    if (query) list = list.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.brand.toLowerCase().includes(query.toLowerCase()));
-    if (brand) list = list.filter(p => p.brand === brand);
-    if (priceMin) list = list.filter(p => p.basePrice >= Number(priceMin));
-    if (priceMax) list = list.filter(p => p.basePrice <= Number(priceMax));
-    if (sort === 'price-asc') list.sort((a, b) => a.basePrice - b.basePrice);
-    if (sort === 'price-desc') list.sort((a, b) => b.basePrice - a.basePrice);
-    if (sort === 'rating') list.sort((a, b) => b.rating - a.rating);
-    if (sort === 'popular') list.sort((a, b) => b.reviewCount - a.reviewCount);
+    if (categoryParam) list = list.filter(p => p.categoryName === categoryParam);
+    if (query) list = list.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.brandName.toLowerCase().includes(query.toLowerCase()));
+    if (brandName) list = list.filter(p => p.brandName === brandName);
+    if (priceMin) list = list.filter(p => p.minPrice >= Number(priceMin));
+    if (priceMax) list = list.filter(p => p.minPrice <= Number(priceMax));
+    if (sort === 'price-asc') list.sort((a, b) => a.minPrice - b.minPrice);
+    if (sort === 'price-desc') list.sort((a, b) => b.minPrice - a.minPrice);
+    if (sort === 'averageRating') list.sort((a, b) => b.averageRating - a.averageRating);
     return list;
-  }, [categoryId, query, sort, priceMin, priceMax, brand, products]);
+  }, [categoryParam, query, sort, priceMin, priceMax, brandName, products]);
 
-  const selectedCategory = categories.find(c => c.id === categoryId);
+  const selectedCategory = categories.find(c => c.name === categoryParam);
 
   const resetFilters = () => {
-    setBrand(''); setPriceMin(''); setPriceMax(''); setSort('default');
+    setbrandName(''); setPriceMin(''); setPriceMax(''); setSort('default');
     setSearchParams({});
   };
 
@@ -63,20 +64,20 @@ export default function ProductsPage() {
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Danh mục</p>
                   <Radio.Group
-                    value={categoryId}
-                    onChange={e => e.target.value ? setSearchParams({ category: e.target.value }) : setSearchParams(query ? { q: query } : {})}
+                    value={categoryParam}
+                    onChange={e => e.target.value ? setSearchParams({ category: e.target.value }) : setSearchParams({})}
                     className="flex flex-col gap-1.5"
                   >
-                    <Radio value={null}>Tất cả</Radio>
-                    {categories.map(cat => <Radio key={cat.id} value={cat.id}>{cat.name} ({cat.productCount})</Radio>)}
+                    <Radio value="">Tất cả</Radio>
+                    {categories.map(cat => <Radio key={cat.id} value={cat.name}>{cat.name}</Radio>)}
                   </Radio.Group>
                 </div>
 
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Thương hiệu</p>
-                  <Radio.Group value={brand} onChange={e => setBrand(e.target.value)} className="flex flex-col gap-1.5">
+                  <Radio.Group value={brandName} onChange={e => setbrandName(e.target.value)} className="flex flex-col gap-1.5">
                     <Radio value="">Tất cả</Radio>
-                    {brands.map(b => <Radio key={b} value={b}>{b}</Radio>)}
+                    {brandNames.map(b => <Radio key={b} value={b}>{b}</Radio>)}
                   </Radio.Group>
                 </div>
 
@@ -103,8 +104,7 @@ export default function ProductsPage() {
                 <Select.Option value="default">Mặc định</Select.Option>
                 <Select.Option value="price-asc">Giá thấp → cao</Select.Option>
                 <Select.Option value="price-desc">Giá cao → thấp</Select.Option>
-                <Select.Option value="rating">Đánh giá cao nhất</Select.Option>
-                <Select.Option value="popular">Phổ biến nhất</Select.Option>
+                <Select.Option value="averageRating">Đánh giá cao nhất</Select.Option>
               </Select>
             </div>
 
@@ -115,20 +115,16 @@ export default function ProductsPage() {
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-5">
                 {filtered.map(p => (
-                  <div key={p.id} className="product-card relative" onClick={() => navigate(`/products/${p.slug}`)}>
+                  <div key={p.id} className="product-card relative" onClick={() => navigate(`/products/${p.id}`)}>
                     <div className="product-card-img">
-                      <img src={p.thumbnail} alt={p.name} />
-                      {p.featured && (
-                        <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">Nổi bật</span>
-                      )}
+                      <img src={p.imageUrls?.[0]} alt={p.name} /> 
                     </div>
                     <div className="p-3.5">
-                      <p className="text-xs text-gray-500 mb-1">{p.brand}</p>
+                      <p className="text-xs text-gray-500 mb-1">{p.brandName}</p>
                       <p className="font-semibold text-sm text-gray-800 mb-1.5 line-clamp-2">{p.name}</p>
-                      <p className="text-base font-bold text-blue-600">{formatPrice(p.basePrice)}</p>
+                      <p className="text-base font-bold text-blue-600">{formatPrice(p.minPrice)}</p>
                       <div className="flex items-center gap-1 mt-1.5">
-                        <Rate disabled defaultValue={p.rating} allowHalf className="text-xs" />
-                        <span className="text-xs text-gray-400">({p.reviewCount})</span>
+                        <Rate disabled defaultValue={p.averageRating} allowHalf className="text-xs" />
                       </div>
                     </div>
                   </div>

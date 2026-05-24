@@ -40,7 +40,7 @@ export default function StaffSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-gray-700 pb-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
             {user?.name?.[0]}
@@ -52,13 +52,13 @@ export default function StaffSidebar() {
         </div>
         <button
           onClick={() => navigate('/')}
-          className="w-full flex items-center gap-2 text-gray-300 hover:text-white text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-2 !text-gray-300 hover:text-white text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
         >
           <GlobalOutlined /> Website
         </button>
         <button
           onClick={() => { logout(); navigate('/login'); }}
-          className="w-full flex items-center gap-2 text-red-400 hover:text-red-300 text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-2 !text-red-400 hover:text-red-300 text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
         >
           <LogoutOutlined /> Đăng xuất
         </button>

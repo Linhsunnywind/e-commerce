@@ -13,7 +13,9 @@ namespace E_commerce.DTOs.Order
         public decimal TotalAmount { get; set; }
         public OrderStatus Status { get; set; }
         public Guid UserId { get; set; }
-        public string ShippingAddress { get; set; }
+        public string ReceiverName { get; set; } = null!;
+        public string ReceiverPhone { get; set; } = null!;
+        public string ShippingAddress { get; set; } = null!;
         public string PaymentMethodName { get; set; } = null!;
         public string? VoucherCode { get; set; }
         public List<OrderDetailResponse> Items { get; internal set; }

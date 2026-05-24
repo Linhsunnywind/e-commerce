@@ -1,4 +1,3 @@
-using Azure.Core;
 using E_commerce.DTOs.Image;
 using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
@@ -12,9 +11,14 @@ namespace E_commerce.Controllers
     public class ProductImageController : ControllerBase
     {
         private readonly IProductImageService _productImageService;
-        public ProductImageController(IProductImageService productImageService)
+        private readonly CloudinaryDotNet.Cloudinary _cloudinary;
+
+        public ProductImageController(
+            IProductImageService productImageService,
+            CloudinaryDotNet.Cloudinary cloudinary)
         {
             _productImageService = productImageService;
+            _cloudinary = cloudinary;
         }
         // POST api/products/{id}/images
         [HttpPost("products/{id}/images")]
@@ -45,6 +49,29 @@ namespace E_commerce.Controllers
             {
                 return NotFound(BaseResponse<string>.Fail(ex.Message, 404));
             }
+        }
+        [HttpPost("images/upload")]
+        [Authorize(Roles = "Admin,Staff")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadImage([FromForm] UploadImageRequest request)
+        {
+            var file = request.File;
+            if (file == null || file.Length == 0)
+                return BadRequest("No file provided.");
+
+            using var stream = file.OpenReadStream();
+            var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams
+            {
+                File = new CloudinaryDotNet.FileDescription(file.FileName, stream),
+                Folder = "ecommerce/products"
+            };
+
+            var result = await _cloudinary.UploadAsync(uploadParams);
+
+            if (result.Error != null)
+                return BadRequest(result.Error.Message);
+
+            return Ok(BaseResponse<string>.Ok(result.SecureUrl.ToString()));
         }
     }
 }

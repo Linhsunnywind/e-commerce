@@ -11,14 +11,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     setLoading(true);
     setError('');
-    const result = login(values.email, values.password);
+    const result = await login(values.email, values.password);
     setLoading(false);
     if (result.ok) {
-      if (result.role === 'admin') navigate('/admin/dashboard');
-      else if (result.role === 'staff') navigate('/staff/orders');
+      if (result.roleName === 'Admin') navigate('/admin/dashboard');
+      else if (result.roleName === 'Staff') navigate('/staff/orders');
       else navigate('/');
     } else {
       setError(result.message);
@@ -53,7 +53,7 @@ export default function LoginPage() {
         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-500 mb-2">Tài khoản demo:</p>
           <div className="flex gap-2 flex-wrap">
-            {[['admin@shop.com','admin123','Admin'],['dinhvangiang@shop.com','staff123','Staff'],['nguyenvanan@gmail.com','customer123','Customer']].map(([email,pw,label]) => (
+            {[['admin@shop.com','123456','Admin'],['dinhvangiang@shop.com','123456','Staff'],['nguyenvanan@gmail.com','123456','Customer']].map(([email,pw,label]) => (
               <button key={label} onClick={() => fillDemo(email, pw)} className="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors border border-blue-200">
                 {label}
               </button>

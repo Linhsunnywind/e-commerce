@@ -1,37 +1,59 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import cartApi from '../api/cartApi.js';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]);
+	const {user} = useAuth();
+	const [items, setItems] = useState([]);
 
-  const addToCart = (product, variant, qty = 1) => {
-    setItems(prev => {
-      const existing = prev.find(i => i.variantId === variant.id);
-      if (existing) {
-        return prev.map(i => i.variantId === variant.id ? { ...i, qty: i.qty + qty } : i);
-      }
-      return [...prev, { productId: product.id, variantId: variant.id, name: product.name, variant: variant.label, price: variant.price, thumbnail: product.thumbnail, qty }];
-    });
-  };
+	useEffect (() => {
+		if (!user){
+			setItems([]);
+			return;
+		}
+		const fetchCart = async () => {
+			try {
+				const res = await cartApi.getCart();
+				setItems(res.data.items || []);
+			}catch (err){
+				setItems([]);
+			}
+		}
+		fetchCart()
+	}, [user])
 
-  const removeFromCart = (variantId) => setItems(prev => prev.filter(i => i.variantId !== variantId));
+	const addToCart = async(variantId, quantity) => {
+		await cartApi.addItem({productVariantId: variantId, quantity });
+		const res = await cartApi.getCart();
+		setItems(res.data.items || []);
+    	return res.data.items || [];
+	}
 
-  const updateQty = (variantId, qty) => {
-    if (qty < 1) return removeFromCart(variantId);
-    setItems(prev => prev.map(i => i.variantId === variantId ? { ...i, qty } : i));
-  };
+	const updateQuantity = async(itemId, quantity) => {
+		await cartApi.updateItem(itemId, { quantity });
+		const res = await cartApi.getCart();
+		setItems(res.data.items || []);
+	}
+	const removeFromCart = async (itemId) => {
+		await cartApi.deleteItem(itemId)
+		setItems(prev => prev.filter(i => i.id !== itemId))
+	}
 
-  const clearCart = () => setItems([]);
+	const clearCart = async () => {
+		await cartApi.clearCart()
+		setItems([])
+	}
 
-  const totalItems = items.reduce((s, i) => s + i.qty, 0);
-  const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+	const totalItems = items.reduce((s, i) => s + i.quantity, 0)
+  	const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0)
 
-  return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQty, clearCart, totalItems, subtotal }}>
-      {children}
-    </CartContext.Provider>
-  );
+	return (
+		<CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, subtotal }}>
+		{children}
+		</CartContext.Provider>
+	);
 }
 
 export const useCart = () => useContext(CartContext);
