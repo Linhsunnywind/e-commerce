@@ -17,32 +17,29 @@ namespace E_commerce.Services
 
         public async Task<List<CategoryResponse>> GetCategories()
         {
-            return await _context.Categories
-                .Select(c => new CategoryResponse
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                })
+            return await _context
+                .Categories.Select(c => new CategoryResponse { Id = c.Id, Name = c.Name })
                 .ToListAsync();
         }
 
         public async Task<CategoryResponse> CreateCategory(CategoryRequest request)
         {
-            var category = new Category
+            var existingCategory = await _context.Categories.FirstOrDefaultAsync(c =>
+                c.Name.ToLower() == request.Name.ToLower()
+            );
+
+            if (existingCategory != null)
             {
-                Id = Guid.NewGuid(),
-                Name = request.Name
-            };
+                throw new Exception("Category name already exists");
+            }
+
+            var category = new Category { Id = Guid.NewGuid(), Name = request.Name };
 
             await _context.Categories.AddAsync(category);
 
             await _context.SaveChangesAsync();
 
-            return new CategoryResponse
-            {
-                Id = category.Id,
-                Name = category.Name
-            };
+            return new CategoryResponse { Id = category.Id, Name = category.Name };
         }
 
         public async Task<CategoryResponse> UpdateCategory(Guid id, CategoryRequest request)
@@ -56,11 +53,7 @@ namespace E_commerce.Services
 
             await _context.SaveChangesAsync();
 
-            return new CategoryResponse
-            {
-                Id = category.Id,
-                Name = category.Name
-            };
+            return new CategoryResponse { Id = category.Id, Name = category.Name };
         }
 
         public async Task DeleteCategory(Guid id)

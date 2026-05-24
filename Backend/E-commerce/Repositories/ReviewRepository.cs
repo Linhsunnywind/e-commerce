@@ -14,9 +14,24 @@ namespace E_commerce.Repositories
             _context = context;
         }
 
+        public async Task<bool> HasUserPurchasedProduct(
+            Guid userId,
+            Guid productId)
+        {
+            return await _context.OrderDetails
+                .Include(od => od.Order)
+                .Include(od => od.ProductVariant)
+                .AnyAsync(od =>
+                    od.Order.UserId == userId &&
+                    od.Order.Status == OrderStatus.Delivered &&
+                    od.ProductVariant.ProductId == productId);
+        }
+
         public async Task<Product?> GetProductById(Guid productId)
         {
             return await _context.Products
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(p => p.Id == productId);
         }
 

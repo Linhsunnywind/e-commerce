@@ -29,9 +29,19 @@ namespace E_commerce.Controllers.BrandController
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateBrand(BrandRequest request)
         {
-            var result = await _brandService.CreateBrand(request);
+            try
+            {
+                var result = await _brandService.CreateBrand(request);
 
-            return Ok(BaseResponse<BrandResponse>.Ok(result));
+                return StatusCode(
+                    201,
+                    BaseResponse<BrandResponse>.Ok(result, "Brand created successfully")
+                );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(BaseResponse<string>.Fail(ex.Message, 400));
+            }
         }
 
         [HttpPut("{id}")]

@@ -53,6 +53,16 @@ namespace E_commerce.Services
                     404);
             }
 
+            var hasPurchased = await _reviewRepository
+                .HasUserPurchasedProduct(userId, productId);
+
+            if (!hasPurchased)
+            {
+                return BaseResponse<string>.Fail(
+                    "You can only review purchased products",
+                    403);
+            }
+
             var review = new Review
             {
                 Id = Guid.NewGuid(),

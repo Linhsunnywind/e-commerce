@@ -17,32 +17,23 @@ namespace E_commerce.Services
 
         public async Task<List<BrandResponse>> GetBrands()
         {
-            return await _context.Brands
-                .Select(b => new BrandResponse
-                {
-                    Id = b.Id,
-                    Name = b.Name
-                })
+            return await _context
+                .Brands.Select(b => new BrandResponse { Id = b.Id, Name = b.Name })
                 .ToListAsync();
         }
 
         public async Task<BrandResponse> CreateBrand(BrandRequest request)
         {
-            var brand = new Brand
-            {
-                Id = Guid.NewGuid(),
-                Name = request.Name
-            };
-
+            var existedBrand = await _context.Brands.AnyAsync(b =>
+                b.Name.ToLower() == request.Name.ToLower()
+            );
+            if (existedBrand)
+                throw new Exception("Brand name already exists");
+            var brand = new Brand { Id = Guid.NewGuid(), Name = request.Name };
             await _context.Brands.AddAsync(brand);
-
             await _context.SaveChangesAsync();
 
-            return new BrandResponse
-            {
-                Id = brand.Id,
-                Name = brand.Name
-            };
+            return new BrandResponse { Id = brand.Id, Name = brand.Name };
         }
 
         public async Task<BrandResponse> UpdateBrand(Guid id, BrandRequest request)
@@ -56,11 +47,7 @@ namespace E_commerce.Services
 
             await _context.SaveChangesAsync();
 
-            return new BrandResponse
-            {
-                Id = brand.Id,
-                Name = brand.Name
-            };
+            return new BrandResponse { Id = brand.Id, Name = brand.Name };
         }
 
         public async Task DeleteBrand(Guid id)

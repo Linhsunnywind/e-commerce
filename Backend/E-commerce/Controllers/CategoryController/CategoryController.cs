@@ -29,9 +29,19 @@ namespace E_commerce.Controllers.CategoryController
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateCategory(CategoryRequest request)
         {
-            var result = await _categoryService.CreateCategory(request);
+            try
+            {
+                var result = await _categoryService.CreateCategory(request);
 
-            return Ok(BaseResponse<CategoryResponse>.Ok(result));
+                return StatusCode(
+                    201,
+                    BaseResponse<CategoryResponse>.Ok(result, "Category created successfully")
+                );
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(BaseResponse<string>.Fail(ex.Message, 400));
+            }
         }
 
         [HttpPut("{id}")]
