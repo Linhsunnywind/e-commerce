@@ -18,6 +18,7 @@ namespace E_commerce.Repositories
             return await _context.Orders
             .Include(o => o.OrderDetails)
                 .ThenInclude(o => o.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
             .Include(o => o.PaymentMethod)
             .Include(o => o.SupportRequest)
             .Include(o => o.Voucher)
@@ -30,6 +31,7 @@ namespace E_commerce.Repositories
             return await _context.Orders
             .Include(o => o.OrderDetails)
                 .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
             .Include(o => o.PaymentMethod)
             .Include(o => o.SupportRequest)
             .Include(o => o.Voucher)
@@ -42,6 +44,7 @@ namespace E_commerce.Repositories
             .Where(o => o.UserId == userId)
             .Include(o => o.OrderDetails)
                 .ThenInclude(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
             .Include(o => o.PaymentMethod)
             .Include(o => o.SupportRequest)
             .Include(o => o.Voucher)

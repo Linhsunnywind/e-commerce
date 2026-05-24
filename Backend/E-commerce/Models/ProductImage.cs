@@ -14,5 +14,6 @@ namespace E_commerce.Models
 
         [Required]
         public string ImageUrl {get; set;} = null!;
+        //  public string? PublicId { get; set; }
     }
 }

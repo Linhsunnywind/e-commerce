@@ -29,8 +29,15 @@ namespace E_commerce.Models
         [ForeignKey("UserId")]
         public User? User { get; set; }
 
+        [Required, StringLength(100)]
+        public string ReceiverName { get; set; } = null!;
+
+        [Required, StringLength(15)]
+        public string ReceiverPhone { get; set; } = null!;
+
+        // Snapshot: "Street, Ward, District, Province"
         [Required(ErrorMessage ="Shipping Address is required.")]
-        [StringLength(255)]
+        [StringLength(500)]
         public string ShippingAddress { get; set; } = null!;
 
         [Required(ErrorMessage ="PaymentMethodId is required.")]

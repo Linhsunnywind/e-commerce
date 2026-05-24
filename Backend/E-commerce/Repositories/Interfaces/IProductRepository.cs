@@ -15,7 +15,13 @@ namespace E_commerce.Repositories.Interfaces
         void UpdateProduct(Product product);
         // xóa sản phẩm
         void DeleteProduct(Product product);
-        // xóa biến thể của sản phẩm
+        // cập nhật biến thể trực tiếp (bypass EF change tracking)
+        Task UpdateVariantAsync(Guid id, string name, decimal price, int quantity);
+        // thêm biến thể mới trực tiếp bằng raw SQL
+        Task InsertVariantAsync(Guid variantId, Guid productId, string name, decimal price, int quantity);
+        // xóa biến thể bằng ExecuteDeleteAsync
+        Task DeleteVariantsAsync(List<Guid> variantIds);
+        // xóa biến thể của sản phẩm (EF tracking - dùng cho images)
         void RemoveVariants(List<ProductVariant> variants);
         // Xóa danh sách các hình ảnh đính kèm của sản phẩm
         void RemoveImages(List<ProductImage> images);

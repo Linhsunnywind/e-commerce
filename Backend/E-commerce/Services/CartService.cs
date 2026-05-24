@@ -24,6 +24,7 @@ namespace E_commerce.Services.Implementations
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .ThenInclude(ci => ci.ProductVariant)
+                .ThenInclude(pv => pv.Product)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             // Không tìm thấy cart
@@ -38,6 +39,7 @@ namespace E_commerce.Services.Implementations
                 {
                     Id = ci.Id,
                     ProductVariantId = ci.ProductVariantId,
+                    ProductName = ci.ProductVariant.Product != null ? ci.ProductVariant.Product.Name : string.Empty,
                     ProductVariantName = ci.ProductVariant.Name,
                     Price = ci.ProductVariant.Price,
                     Quantity = ci.Quantity
@@ -149,6 +151,15 @@ namespace E_commerce.Services.Implementations
 
             return true;
         }
+        public async Task RemoveItemsByIdsAsync(List<Guid> itemIds)
+        {
+            var items = await _context.CartItems
+                .Where(ci => itemIds.Contains(ci.Id))
+                .ToListAsync();
+            _context.CartItems.RemoveRange(items);
+            await _context.SaveChangesAsync();
+        }
+
         // Xóa toàn bộ cart
         public async Task<bool> ClearCartAsync(Guid userId)
         {

@@ -1,4 +1,5 @@
-﻿using E_commerce.DTOs.User;
+﻿using BCrypt.Net;
+using E_commerce.DTOs.User;
 using E_commerce.Repositories.Interfaces;
 using E_commerce.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -99,6 +100,33 @@ namespace E_commerce.Services
                 PhoneNumber = user.PhoneNumber,
                 Address = user.Address ?? string.Empty
             };
+            return response;
+        }
+
+        public async Task<ServiceResponse<string>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+        {
+            var response = new ServiceResponse<string>();
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                response.IsSuccess = false;
+                response.Message = "Account does not exist.";
+                return response;
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.Password))
+            {
+                response.IsSuccess = false;
+                response.Message = "Mật khẩu hiện tại không đúng.";
+                return response;
+            }
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _userRepository.SaveChangesAsync();
+
+            response.IsSuccess = true;
+            response.Message = "Đổi mật khẩu thành công.";
             return response;
         }
 

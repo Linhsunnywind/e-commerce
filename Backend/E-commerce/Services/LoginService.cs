@@ -35,6 +35,7 @@ namespace E_commerce.Services
             response.Data = new LoginResponse
             {
                 Email = user.Email,
+                Name = user.Name,
                 RoleName = user.Role?.Name ?? "Customer",
                 Token = _tokenService.CreateToken(user)
             };

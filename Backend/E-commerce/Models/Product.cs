@@ -33,6 +33,8 @@ namespace E_commerce.Models
 
         [ForeignKey(nameof(BrandId))]
         public virtual Brand? Brand { get; set; }
+        public bool IsDeleted { get; set; } = false;
+
 
         public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
         public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();

@@ -11,6 +11,8 @@ namespace E_commerce.Models
         [StringLength(100)]
         public string Name { get; set; }
 
+        public bool IsDeleted { get; set; } = false;
+
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }
