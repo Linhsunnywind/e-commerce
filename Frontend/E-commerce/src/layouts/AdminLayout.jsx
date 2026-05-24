@@ -4,8 +4,9 @@ import AdminHeader from '../components/admin/AdminHeader';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {
-  const { user } = useAuth();
-  if (!user || user.role !== 'admin') return <Navigate to="/login" replace />;
+  const { user, authLoading } = useAuth();
+  if (authLoading) return null;
+  if (!user || user.roleName !== 'Admin') return <Navigate to="/login" replace />;
 
   return (
     <div className="flex min-h-screen bg-gray-50">

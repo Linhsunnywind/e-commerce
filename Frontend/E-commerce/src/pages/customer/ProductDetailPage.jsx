@@ -1,26 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Rate, Tag, InputNumber, Card, Divider } from 'antd';
+import { Button, Rate, Tag, InputNumber, Card } from 'antd';
 import { ShoppingCartOutlined, ThunderboltOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { getReviewsByProduct, getCategoryById, formatPrice } from '../../data/mockData';
 import { useProducts } from '../../context/ProductContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import reviewApi from '../../api/reviewApi.js';
 import { useToast, ToastContainer } from '../../hooks/useToast';
 
 export default function ProductDetailPage() {
-  const { slug } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart} = useCart();
   const { user } = useAuth();
   const { toasts, show: showToast } = useToast();
-  const { getProductBySlug } = useProducts();
-
-  const product = getProductBySlug(slug);
+  const { getProductById } = useProducts();
+  const [reviews, setReviews] = useState([]);
+  const product = getProductById(id);
   const [selectedVariant, setSelectedVariant] = useState(product?.variants[0] || null);
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchReviews = async () => {
+      try {
+        const res = await reviewApi.getByProduct(id);
+        setReviews(res.data || []);
+      }catch{
+        setReviews([]);
+      }
+    }
+    fetchReviews()
+  }, [id]);
 
   if (!product) {
     return (
@@ -31,26 +44,37 @@ export default function ProductDetailPage() {
       </div>
     );
   }
+  const allImages = (product.imageUrls || []);
 
-  const reviews = getReviewsByProduct(product.id);
-  const category = getCategoryById(product.categoryId);
-  const allImages = [product.thumbnail, ...(product.images || [])];
-
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!user) { showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning'); return; }
     if (!selectedVariant) return;
-    addToCart(product, selectedVariant, qty);
-    setAdded(true);
-    showToast(`Đã thêm "${product.name}" vào giỏ hàng`, 'success');
-    setTimeout(() => setAdded(false), 2000);
+    try {
+      await addToCart(selectedVariant.id, qty);
+      setAdded(true);
+      showToast(`Đã thêm "${product.name}" vào giỏ hàng`, 'success');
+      setTimeout(() => setAdded(false), 2000);
+    }catch {
+      showToast('Thêm vào giỏ hàng thất bại', 'error');
+    }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!user) { showToast('Vui lòng đăng nhập để mua hàng', 'warning'); return; }
     if (!selectedVariant) return;
-    addToCart(product, selectedVariant, qty);
-    navigate('/cart');
+    try {
+      const updatedItems = await addToCart(selectedVariant.id, qty);
+      // tìm cart item vừa thêm/cập nhật theo productVariantId
+      const cartItem = updatedItems.find(i => i.productVariantId === selectedVariant.id);
+      navigate('/checkout', {
+        state: { selectedItemIds: cartItem ? [cartItem.id] : null }
+      });
+    } catch {
+      showToast('Có lỗi xảy ra', 'error');
+    }
   };
+
+  const formatPrice = (p) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p)
 
   return (
     <>
@@ -60,7 +84,7 @@ export default function ProductDetailPage() {
           <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
             <span onClick={() => navigate('/')} className="cursor-pointer hover:text-blue-600">Trang chủ</span>
             <span>›</span>
-            <span onClick={() => navigate(`/products?category=${product.categoryId}`)} className="cursor-pointer hover:text-blue-600">{category?.name}</span>
+            <span onClick={() => navigate(`/products?category=${product.categoryName}`)} className="cursor-pointer hover:text-blue-600">{product.categoryName}</span>
             <span>›</span>
             <span className="text-gray-800 font-medium truncate max-w-xs">{product.name}</span>
           </nav>
@@ -68,8 +92,8 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-2 gap-10 md:grid-cols-1">
             {/* Images */}
             <div>
-              <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-3">
-                <img src={allImages[activeImg]} alt={product.name} className="w-full h-full object-cover" />
+              <div className="aspect-square max-h-96 rounded-xl overflow-hidden bg-gray-100 mb-3">
+                <img src={allImages[activeImg]} alt={product.name} className="w-full h-full object-contain" />
               </div>
               <div className="flex gap-2 flex-wrap">
                 {allImages.map((img, i) => (
@@ -86,27 +110,27 @@ export default function ProductDetailPage() {
 
             {/* Info */}
             <div>
-              <p className="text-sm text-blue-600 font-medium mb-1">{product.brand}</p>
+              <p className="text-sm text-blue-600 font-medium mb-1">{product.brandName}</p>
               <h1 className="text-2xl font-bold text-gray-800 mb-3">{product.name}</h1>
 
               <div className="flex items-center gap-3 mb-4">
-                <Rate disabled value={product.rating} allowHalf />
-                <span className="font-semibold">{product.rating}</span>
-                <span className="text-gray-400 text-sm">({product.reviewCount} đánh giá)</span>
-                <Tag color={selectedVariant?.stock > 0 ? 'green' : 'red'}>
-                  {selectedVariant ? `Còn ${selectedVariant.stock} sản phẩm` : `Còn ${product.stock} sp`}
+                <Rate disabled value={product.averageRating} allowHalf />
+                <span className="font-semibold">{product.averageRating}</span>
+                <span className="text-gray-400 text-sm">({reviews.length} đánh giá)</span>
+                <Tag color={selectedVariant?.quantity > 0 ? 'green' : 'red'}>
+                  {selectedVariant ? `Còn ${selectedVariant.quantity} sản phẩm` : `Còn ${product.quantity} sp`}
                 </Tag>
               </div>
 
               <div className="text-3xl font-bold text-blue-600 mb-4">
-                {formatPrice(selectedVariant?.price || product.basePrice)}
+                {formatPrice(selectedVariant?.price || product.minPrice)}
               </div>
 
               <p className="text-gray-600 text-sm leading-relaxed mb-5">{product.description}</p>
 
               {product.variants.length > 0 && (
                 <div className="mb-5">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Phiên bản: <strong>{selectedVariant?.label}</strong></p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Phiên bản: <strong>{selectedVariant?.name}</strong></p>
                   <div className="flex flex-wrap gap-2">
                     {product.variants.map(v => (
                       <button
@@ -118,7 +142,7 @@ export default function ProductDetailPage() {
                             : 'border-gray-300 text-gray-700 hover:border-blue-400'
                         }`}
                       >
-                        {v.label}
+                        {v.name}
                       </button>
                     ))}
                   </div>
@@ -156,22 +180,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Specs + Reviews */}
-          <div className="grid grid-cols-2 gap-6 mt-10 md:grid-cols-1">
-            {product.specs && Object.keys(product.specs).length > 0 && (
-              <Card title="Thông số kỹ thuật">
-                <table className="w-full text-sm">
-                  <tbody>
-                    {Object.entries(product.specs).map(([k, v]) => (
-                      <tr key={k} className="border-b border-gray-100 last:border-0">
-                        <td className="py-2 pr-4 text-gray-500 w-2/5">{k}</td>
-                        <td className="py-2 font-medium text-gray-800">{v}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Card>
-            )}
+          {/*Reviews */}
 
             <Card title={`Đánh giá từ khách hàng (${reviews.length})`}>
               {reviews.length === 0 ? (
@@ -185,13 +194,14 @@ export default function ProductDetailPage() {
                     <div key={r.id} className="border-b border-gray-100 pb-4 last:border-0">
                       <div className="flex items-start gap-3 mb-2">
                         <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-                          {r.customerName[0]}
+                          {r.userName?.[0]}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{r.customerName}</span>
-                            {r.verified && <Tag color="green" className="text-xs">Đã mua</Tag>}
-                            <span className="text-xs text-gray-400 ml-auto">{r.date}</span>
+                            <span className="font-medium text-sm">{r.userName}</span>
+                            <span className="text-xs text-gray-400 ml-auto">
+                              <span>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span> 
+                            </span>
                           </div>
                           <Rate disabled value={r.rating} className="text-xs" />
                         </div>
@@ -204,7 +214,6 @@ export default function ProductDetailPage() {
             </Card>
           </div>
         </div>
-      </div>
       <ToastContainer toasts={toasts} />
     </>
   );

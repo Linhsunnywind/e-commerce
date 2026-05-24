@@ -1,21 +1,69 @@
-import { createContext, useContext, useState } from 'react';
-import { users } from '../data/mockData';
+import { createContext, useContext, useState, useEffect } from 'react';
+import authApi from '../api/authApi.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const login = (email, password) => {
-    const found = users.find(u => u.email === email && u.password === password);
-    if (found) { setUser(found); return { ok: true, role: found.role }; }
-    return { ok: false, message: 'Email hoặc mật khẩu không đúng' };
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) setUser(JSON.parse(savedUser));
+    setAuthLoading(false);  // đánh dấu đã đọc xong localStorage
+  }, []);
+
+  // Khi app load lại, đọc user từ localStorage để không mất session
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+
+      const res = await authApi.login({ email, password });
+
+      const { token, name, roleName } = res.data;
+
+      const userData = { name, email, roleName };
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      setUser(userData);
+      return { ok: true, roleName };
+    } catch (err) {
+      return { ok: false, message: err.response?.data?.message || 'Đăng nhập thất bại' };
+    }
   };
 
-  const logout = () => setUser(null);
+  const register = async (name, email, phone, password) => {
+    try {
+      await authApi.register({ name, email, phoneNumber: phone, password });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: err.response?.data?.message || 'Đăng ký thất bại' };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin: user?.role === 'admin', isStaff: user?.role === 'staff', isCustomer: user?.role === 'customer' }}>
+    <AuthContext.Provider value={{
+      authLoading,
+      user,
+      login,
+      logout,
+      register,
+      isAdmin: user?.roleName === 'Admin',
+      isStaff: user?.roleName === 'Staff',
+      isCustomer: user?.roleName === 'Customer'
+    }}>
       {children}
     </AuthContext.Provider>
   );

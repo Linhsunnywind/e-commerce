@@ -2,19 +2,31 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Alert } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, LockOutlined } from '@ant-design/icons';
+import { useAuth } from '../../context/AuthContext';  
 
 export default function RegisterPage() {
+  const {register} = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     if (values.password !== values.confirm) {
       setError('Mật khẩu xác nhận không khớp');
       return;
     }
-    alert('Đăng ký thành công! (demo - chưa kết nối backend)');
-    navigate('/login');
+    setLoading(true);
+    setError("");
+    const result = await register(values.name, values.email, values.phone, values.password);
+    
+    setLoading(false);
+    console.log(result);
+    if (result.ok) {
+      navigate('/login');
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
@@ -44,7 +56,7 @@ export default function RegisterPage() {
           <Form.Item label="Xác nhận mật khẩu" name="confirm" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" block className="h-11 font-semibold">
+          <Button type="primary" htmlType="submit" block loading={loading} className="h-11 font-semibold">
             Đăng ký
           </Button>
         </Form>
