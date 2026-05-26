@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
-using E_commerce.Controllers.ProductVariantController;
+using E_commerce.Controllers;
 using E_commerce.DTOs.Variant;
 using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 
-namespace E_commerce.Tests
+namespace E_commerce.Tests.ProductVariantTests
 {
     public class ProductVariantControllerTests
     {
