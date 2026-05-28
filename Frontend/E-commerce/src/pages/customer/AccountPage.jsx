@@ -189,17 +189,17 @@ export default function AccountPage() {
                   onValuesChange={handleProfileChange}
                 >
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
-                    <Form.Item label="Họ và tên" name="name">
+                    <Form.Item label="Họ và tên" name="name" rules={[{ max: 100, message: 'Tối đa 100 ký tự' }]}>
                       <Input />
                     </Form.Item>
                     <Form.Item label="Email">
                       <Input value={user.email} disabled />
                       <p className="text-xs text-gray-400 mt-1">Email không thể thay đổi</p>
                     </Form.Item>
-                    <Form.Item label="Số điện thoại" name="phone">
+                    <Form.Item label="Số điện thoại" name="phone" rules={[{ pattern: /^\d{10}$/, message: 'Số điện thoại phải đúng 10 chữ số' }]}>
                       <Input placeholder="09xxxxxxxx" />
                     </Form.Item>
-                    <Form.Item label="Địa chỉ" name="address">
+                    <Form.Item label="Địa chỉ" name="address" rules={[{ max: 200, message: 'Tối đa 200 ký tự' }]}>
                       <Input placeholder="Địa chỉ của bạn" />
                     </Form.Item>
                   </div>
@@ -283,7 +283,11 @@ export default function AccountPage() {
                     <Form.Item
                       label="Mật khẩu mới"
                       name="newPassword"
-                      rules={[{ required: true, min: 6, message: 'Tối thiểu 6 ký tự' }]}
+                      rules={[
+                        { required: true, message: 'Vui lòng nhập mật khẩu mới' },
+                        { min: 6, message: 'Tối thiểu 6 ký tự' },
+                        { pattern: /^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])/, message: 'Phải có chữ hoa, số và ký tự đặc biệt' },
+                      ]}
                     >
                       <Input.Password placeholder="••••••••" />
                     </Form.Item>
@@ -315,10 +319,10 @@ export default function AccountPage() {
       >
         <Form form={addrForm} layout="vertical" onFinish={handleSaveAddr} className="mt-4">
           <div className="grid grid-cols-2 gap-x-4">
-            <Form.Item label="Họ và tên *" name="fullName" rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Form.Item label="Họ và tên *" name="fullName" rules={[{ required: true, message: 'Bắt buộc' }, { max: 100, message: 'Tối đa 100 ký tự' }]}>
               <Input placeholder="Nguyễn Văn A" />
             </Form.Item>
-            <Form.Item label="Số điện thoại *" name="phoneNumber" rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Form.Item label="Số điện thoại *" name="phoneNumber" rules={[{ required: true, message: 'Bắt buộc' }, { pattern: /^\d{10}$/, message: 'Phải đúng 10 chữ số' }]}>
               <Input placeholder="09xxxxxxxx" />
             </Form.Item>
             <Form.Item label="Tỉnh / Thành phố *" name="province" rules={[{ required: true, message: 'Bắt buộc' }]}>

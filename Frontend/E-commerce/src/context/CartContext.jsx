@@ -31,14 +31,14 @@ export function CartProvider({ children }) {
     	return res.data.items || [];
 	}
 
-	const updateQuantity = async(itemId, quantity) => {
-		await cartApi.updateItem(itemId, { quantity });
+	const updateQuantity = async(variantId, quantity) => {
+    await cartApi.updateItem({ productVariantId: variantId, quantity });
 		const res = await cartApi.getCart();
 		setItems(res.data.items || []);
 	}
-	const removeFromCart = async (itemId) => {
-		await cartApi.deleteItem(itemId)
-		setItems(prev => prev.filter(i => i.id !== itemId))
+	const removeFromCart = async (variantId) => {
+		await cartApi.deleteItem(variantId)
+		setItems(prev => prev.filter(i => i.productVariantId !== variantId))
 	}
 
 	const clearCart = async () => {

@@ -71,15 +71,15 @@ export default function StaffManagementPage() {
       <Modal title={editing ? 'Sửa nhân viên' : 'Thêm nhân viên mới'}
         open={showModal} onCancel={() => setShowModal(false)} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Tên đăng nhập *" name="name" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item label="Tên đăng nhập *" name="name" rules={[{ required: true, message: 'Bắt buộc' }, { min: 3, max: 50, message: 'Từ 3 đến 50 ký tự' }]}><Input /></Form.Item>
           {!editing && <>
-            <Form.Item label="Email *" name="email" rules={[{ required: true, type: 'email' }]}><Input /></Form.Item>
-            <Form.Item label="Mật khẩu *" name="password" rules={[{ required: true, min: 8, message: 'Tối thiểu 8 ký tự' }]}>
+            <Form.Item label="Email *" name="email" rules={[{ required: true, message: 'Bắt buộc' }, { type: 'email', message: 'Email không hợp lệ' }]}><Input /></Form.Item>
+            <Form.Item label="Mật khẩu *" name="password" rules={[{ required: true, message: 'Bắt buộc' }, { min: 8, message: 'Tối thiểu 8 ký tự' }, { pattern: /^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])/, message: 'Phải có chữ hoa, số và ký tự đặc biệt' }]}>
               <Input.Password />
             </Form.Item>
           </>}
-          <Form.Item label="Họ và tên" name="fullName"><Input /></Form.Item>
-          <Form.Item label="Số điện thoại *" name="phoneNumber" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item label="Họ và tên *" name="fullName" rules={[{ required: true, message: 'Bắt buộc' }, { max: 100, message: 'Tối đa 100 ký tự' }]}><Input /></Form.Item>
+          <Form.Item label="Số điện thoại *" name="phoneNumber" rules={[{ required: true, message: 'Bắt buộc' }, { pattern: /^\d{10}$/, message: 'Phải đúng 10 chữ số' }]}><Input /></Form.Item>
           <div className="flex justify-end gap-2">
             <Button onClick={() => setShowModal(false)}>Hủy</Button>
             <Button type="primary" htmlType="submit">{editing ? 'Lưu' : 'Thêm'}</Button>

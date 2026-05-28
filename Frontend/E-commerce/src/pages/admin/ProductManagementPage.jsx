@@ -273,8 +273,8 @@ export default function ProductManagementPage() {
 						{variants.map((v, idx) => (
 							<div key={v.id} className="grid grid-cols-[1fr_140px_100px_32px] gap-2 mb-2 items-center">
 								<Input placeholder={`Biến thể ${idx + 1}`} value={v.label} onChange={e => setVariants(vl => vl.map(vt => vt.id === v.id ? { ...vt, label: e.target.value } : vt))} size="small" />
-								<InputNumber placeholder="Giá" value={v.price} onChange={val => setVariants(vl => vl.map(vt => vt.id === v.id ? { ...vt, price: val } : vt))} size="small" className="w-full" formatter={val => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={val => val.replace(/\./g, '')}/>
-								<InputNumber placeholder="Kho" value={v.stock} onChange={val => setVariants(vl => vl.map(vt => vt.id === v.id ? { ...vt, stock: val } : vt))} size="small" className="w-full" formatter={val => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={val => val.replace(/\./g, '')}/>
+								<InputNumber placeholder="Giá" value={v.price} onChange={val => setVariants(vl => vl.map(vt => vt.id === v.id ? { ...vt, price: val } : vt))} size="small" className="w-full" min={0.01} formatter={val => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={val => val.replace(/\./g, '')}/>
+								<InputNumber placeholder="Kho" value={v.stock} onChange={val => setVariants(vl => vl.map(vt => vt.id === v.id ? { ...vt, stock: val } : vt))} size="small" className="w-full" min={0} formatter={val => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={val => val.replace(/\./g, '')}/>
 								<Button size="small" danger type="text" disabled={variants.length === 1} onClick={() => setVariants(vl => vl.filter(vt => vt.id !== v.id))}>✕</Button>
 							</div>
 						))}

@@ -24,5 +24,8 @@ namespace E_commerce.Services.Interfaces
             Guid reviewId,
             Guid userId,
             bool isAdmin);
+        
+        Task<bool> HasUserPurchasedProduct(Guid userId, Guid productId);
+        Task<bool> HasUserReviewed(Guid userId, Guid productId);
     }
 }

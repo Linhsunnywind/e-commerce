@@ -195,8 +195,8 @@ export default function PromotionManagementPage() {
                 <Select.Option value={1}>Cố định (VND)</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item label="Giá trị giảm *" name="discountValue" rules={[{ required: true }]}>
-              <InputNumber className="w-full" min={0}
+            <Form.Item label="Giá trị giảm *" name="discountValue" rules={[{ required: true, message: 'Bắt buộc' }, { type: 'number', min: 0.01, message: 'Phải lớn hơn 0' }]}>
+              <InputNumber className="w-full" min={0.01}
                 formatter={vndFormatter}
                 parser={vndParser}
               />
@@ -222,7 +222,12 @@ export default function PromotionManagementPage() {
             <Form.Item label="Ngày bắt đầu *" name="startDate" rules={[{ required: true }]}>
               <DatePicker className="w-full" />
             </Form.Item>
-            <Form.Item label="Ngày kết thúc *" name="endDate" rules={[{ required: true }]}>
+            <Form.Item label="Ngày kết thúc *" name="endDate" rules={[{ required: true, message: 'Bắt buộc' }, ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || !getFieldValue('startDate') || value.isAfter(getFieldValue('startDate'))) return Promise.resolve();
+                return Promise.reject(new Error('Ngày kết thúc phải sau ngày bắt đầu'));
+              },
+            })]}>
               <DatePicker className="w-full" />
             </Form.Item>
             <Form.Item label="Kích hoạt" name="isActive" valuePropName="checked" className="col-span-2">

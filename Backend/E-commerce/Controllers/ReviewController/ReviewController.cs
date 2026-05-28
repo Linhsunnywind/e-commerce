@@ -27,6 +27,16 @@ namespace E_commerce.Controllers.ReviewController
                 BaseResponse<List<ReviewResponse>>
                     .Ok(result));
         }
+        [HttpGet("{id}/can-review")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> CanReview(Guid id)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var hasPurchased = await _reviewService.HasUserPurchasedProduct(userId, id);
+            var alreadyReviewed = await _reviewService.HasUserReviewed(userId, id);
+            return Ok(new { canReview = hasPurchased && !alreadyReviewed });
+        }
+
 
         [HttpPost("{id}/reviews")]
         [Authorize(Roles = "Customer")]

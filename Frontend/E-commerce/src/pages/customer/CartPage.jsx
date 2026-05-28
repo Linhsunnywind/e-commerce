@@ -26,9 +26,9 @@ export default function CartPage() {
   const toggleAll = () =>
     setSelectedIds(allChecked ? [] : items.map(i => i.id));
 
-  const handleRemove = (id) => {
+  const handleRemove = (id, variantId) => {
     setSelectedIds(prev => prev.filter(x => x !== id));
-    removeFromCart(id);
+    removeFromCart(variantId);
   };
 
   const handleCheckout = () => {
@@ -92,7 +92,7 @@ export default function CartPage() {
                 <InputNumber
                   min={1}
                   value={item.quantity}
-                  onChange={v => updateQuantity(item.id, v || 1)}
+                  onChange={v => updateQuantity(item.productVariantId, v || 1)}
                   className="w-20"
                   size="small"
                 />
@@ -101,7 +101,7 @@ export default function CartPage() {
                   type="text"
                   danger
                   icon={<DeleteOutlined />}
-                  onClick={() => handleRemove(item.id)}
+                  onClick={() => handleRemove(item.id, item.productVariantId)}
                 />
               </div>
             ))}

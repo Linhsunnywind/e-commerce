@@ -68,10 +68,10 @@ export default function SupportPage() {
             <Alert message="Vui lòng đăng nhập để gửi yêu cầu hỗ trợ." type="warning" showIcon className="mb-4" />
           )}
           <Form form={form} layout="vertical" onFinish={handleSubmit} className="max-w-xl">
-            <Form.Item label="Chủ đề *" name="subject" rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Form.Item label="Chủ đề *" name="subject" rules={[{ required: true, message: 'Bắt buộc' }, { max: 200, message: 'Tối đa 200 ký tự' }]}>
               <Input placeholder="Mô tả ngắn vấn đề của bạn" />
             </Form.Item>
-            <Form.Item label="Nội dung chi tiết *" name="message" rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Form.Item label="Nội dung chi tiết *" name="message" rules={[{ required: true, message: 'Bắt buộc' }, { max: 2000, message: 'Tối đa 2000 ký tự' }]}>
               <Input.TextArea rows={5} placeholder="Mô tả chi tiết vấn đề bạn đang gặp phải..." />
             </Form.Item>
             <Button type="primary" htmlType="submit" loading={submitting} disabled={!user}>

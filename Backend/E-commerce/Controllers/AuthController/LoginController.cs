@@ -31,7 +31,7 @@ namespace E_commerce.Controllers.LoginController
             }
             else
             {
-                return BadRequest(BaseResponse<LoginResponse>.Fail(result.Message));
+                return Unauthorized(BaseResponse<LoginResponse>.Fail(result.Message, 401));
             }
         }
     }

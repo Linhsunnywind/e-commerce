@@ -51,7 +51,7 @@ export default function OrderTrackingPage() {
                 <div className="flex flex-col gap-2 mb-4">
                   {(order.items || []).map((item, i) => (
                     <div key={i} className="flex justify-between text-sm text-gray-700">
-                      <span>{item.variantName} × {item.orderQuantity}</span>
+                      <span>{item.productName} — {item.variantName} × {item.orderQuantity}</span>
                       <span className="font-semibold">{formatPrice(item.unitPrice * item.orderQuantity)}</span>
                     </div>
                   ))}

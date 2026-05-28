@@ -10,6 +10,8 @@ namespace E_commerce.DTOs.Staff
 
         [Required]
         [MinLength(8)]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$",
+            ErrorMessage = "Password must contain at least one uppercase letter, one number and one special character.")]
         public string Password { get; set; }
 
         [Required]
