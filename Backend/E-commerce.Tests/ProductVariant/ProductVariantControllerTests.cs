@@ -100,5 +100,94 @@ namespace E_commerce.Tests.ProductVariantTests
             Assert.True(response.Success);
             Assert.Equal("Deleted successfully", response.Message);
         }
+
+        [Fact]
+        public async Task GetVariants_ReturnsOk_WithVariantList()
+        {
+            var productId = Guid.NewGuid();
+            var variants = new List<VariantResponse>
+            {
+                new VariantResponse { Id = Guid.NewGuid(), Name = "128GB", Price = 15990000m, Quatity = 10 },
+                new VariantResponse { Id = Guid.NewGuid(), Name = "256GB", Price = 18990000m, Quatity = 5 }
+            };
+
+            _mockVariantService
+                .Setup(s => s.GetVariantsByProductId(productId))
+                .ReturnsAsync(variants);
+
+            var result = await _controller.GetVariants(productId);
+
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(200, okResult.StatusCode);
+            var response = Assert.IsType<BaseResponse<List<VariantResponse>>>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.Equal(2, response.Data!.Count);
+        }
+
+        [Fact]
+        public async Task GetVariants_ReturnsNotFound_WhenProductNotFound()
+        {
+            var productId = Guid.NewGuid();
+            _mockVariantService
+                .Setup(s => s.GetVariantsByProductId(productId))
+                .ThrowsAsync(new KeyNotFoundException("Product not found"));
+
+            var result = await _controller.GetVariants(productId);
+
+            var notFound = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(404, notFound.StatusCode);
+        }
+
+        [Fact]
+        public async Task AddVariant_ReturnsNotFound_WhenProductNotFound()
+        {
+            var productId = Guid.NewGuid();
+            _mockVariantService
+                .Setup(s => s.AddVariant(productId, It.IsAny<CreateVariantRequest>()))
+                .ThrowsAsync(new KeyNotFoundException("Product not found"));
+
+            var result = await _controller.AddVariant(productId, new CreateVariantRequest
+            {
+                Name = "128GB",
+                Price = 15990000m,
+                Quatity = 10
+            });
+
+            var notFound = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(404, notFound.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdateVariant_ReturnsNotFound_WhenVariantNotFound()
+        {
+            var variantId = Guid.NewGuid();
+            _mockVariantService
+                .Setup(s => s.UpdateVariant(variantId, It.IsAny<UpdateVariantRequest>()))
+                .ThrowsAsync(new KeyNotFoundException("Variant not found"));
+
+            var result = await _controller.UpdateVariant(variantId, new UpdateVariantRequest
+            {
+                Name = "256GB",
+                Price = 18990000m,
+                Quantity = 8
+            });
+
+            var notFound = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(404, notFound.StatusCode);
+        }
+
+        [Fact]
+        public async Task DeleteVariant_ReturnsNotFound_WhenVariantNotFound()
+        {
+            var variantId = Guid.NewGuid();
+            _mockVariantService
+                .Setup(s => s.DeleteVariant(variantId))
+                .ThrowsAsync(new KeyNotFoundException("Variant not found"));
+
+            var result = await _controller.DeleteVariant(variantId);
+
+            var notFound = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(404, notFound.StatusCode);
+        }
     }
 }
