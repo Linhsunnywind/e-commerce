@@ -45,7 +45,7 @@ namespace E_commerce.Tests.Auth
         }
 
         [Fact]
-        public async Task Login_ReturnsBadRequest_WhenCredentialsInvalid()
+        public async Task Login_ReturnsUnauthorized_WhenCredentialsInvalid()
         {
             var loginService = new Mock<ILoginService>();
             var dto = new LoginRequestDTO { Email = "user@example.com", Password = "Wrong123!" };
@@ -62,9 +62,9 @@ namespace E_commerce.Tests.Auth
 
             var result = await controller.Login(dto);
 
-            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
-            var payload = Assert.IsType<BaseResponse<LoginResponse>>(badRequest.Value);
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal(StatusCodes.Status401Unauthorized, unauthorized.StatusCode);
+            var payload = Assert.IsType<BaseResponse<LoginResponse>>(unauthorized.Value);
             Assert.False(payload.Success);
         }
     }

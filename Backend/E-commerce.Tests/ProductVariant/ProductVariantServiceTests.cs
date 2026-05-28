@@ -118,16 +118,30 @@ namespace E_commerce.Tests.ProductVariantTests
         public async Task AddVariant_ThrowsKeyNotFoundException_WhenProductNotFound()
         {
             var missingProductId = Guid.NewGuid();
-            var request = new CreateVariantRequest
-            {
-                Name = "Size M",
-                Price = 15m,
-                Quatity = 2
-            };
+            var request = new CreateVariantRequest { Name = "Size M", Price = 15m, Quatity = 2 };
 
             _productRepo.Setup(r => r.GetById(missingProductId)).ReturnsAsync((Product?)null);
 
             await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.AddVariant(missingProductId, request));
+        }
+
+        [Fact]
+        public async Task UpdateVariant_ThrowsKeyNotFoundException_WhenVariantNotFound()
+        {
+            var missingId = Guid.NewGuid();
+            _variantRepo.Setup(r => r.GetById(missingId)).ReturnsAsync((ProductVariant?)null);
+
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                _service.UpdateVariant(missingId, new UpdateVariantRequest { Name = "X", Price = 10m, Quantity = 1 }));
+        }
+
+        [Fact]
+        public async Task DeleteVariant_ThrowsKeyNotFoundException_WhenVariantNotFound()
+        {
+            var missingId = Guid.NewGuid();
+            _variantRepo.Setup(r => r.GetById(missingId)).ReturnsAsync((ProductVariant?)null);
+
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteVariant(missingId));
         }
     }
 }
