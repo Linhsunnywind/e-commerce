@@ -51,7 +51,7 @@ export default function CategoryManagementPage() {
       <Modal title={editing ? 'Sửa danh mục' : 'Thêm danh mục'} open={showModal}
         onCancel={() => setShowModal(false)} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Tên danh mục *" name="name" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item label="Tên danh mục *" name="name" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }, { max: 100, message: 'Tối đa 100 ký tự' }]}><Input /></Form.Item>
           <div className="flex justify-end gap-2">
             <Button onClick={() => setShowModal(false)}>Hủy</Button>
             <Button type="primary" htmlType="submit">{editing ? 'Lưu' : 'Thêm'}</Button>

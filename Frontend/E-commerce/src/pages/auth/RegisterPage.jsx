@@ -47,10 +47,10 @@ export default function RegisterPage() {
           <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}>
             <Input prefix={<MailOutlined />} placeholder="email@example.com" />
           </Form.Item>
-          <Form.Item label="Số điện thoại" name="phone" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
+          <Form.Item label="Số điện thoại" name="phone" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }, { pattern: /^\d{10}$/, message: 'Số điện thoại phải đúng 10 chữ số' }]}>
             <Input prefix={<PhoneOutlined />} placeholder="09xxxxxxxx" />
           </Form.Item>
-          <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}>
+          <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Tối thiểu 6 ký tự' }, { pattern: /^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])/, message: 'Phải có chữ hoa, số và ký tự đặc biệt' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="Tối thiểu 6 ký tự" />
           </Form.Item>
           <Form.Item label="Xác nhận mật khẩu" name="confirm" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu' }]}>

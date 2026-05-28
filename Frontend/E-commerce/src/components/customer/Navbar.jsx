@@ -25,6 +25,7 @@ export default function Navbar() {
     ...(user?.roleName === 'Staff' ? [{ key: 'staff', label: <Link to="/staff/orders">Staff Panel</Link> }] : []),
     { key: 'account', label: <Link to="/account">Tài khoản</Link> },
     { key: 'orders', label: <Link to="/orders">Đơn hàng</Link> },
+    { key: 'support', label: <Link to="/support">Hỗ trợ</Link> },
     { type: 'divider' },
     { key: 'logout', label: <span className="text-red-500" onClick={handleLogout}>Đăng xuất</span> },
   ];

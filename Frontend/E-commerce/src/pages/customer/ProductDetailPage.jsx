@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Rate, Tag, InputNumber, Card } from 'antd';
+import { Button, Rate, Tag, InputNumber, Card, Form, Input } from 'antd';
 import { ShoppingCartOutlined, ThunderboltOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useProducts } from '../../context/ProductContext';
 import { useCart } from '../../context/CartContext';
@@ -21,6 +21,9 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [added, setAdded] = useState(false);
+  const [reviewForm] = Form.useForm();
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -32,8 +35,15 @@ export default function ProductDetailPage() {
         setReviews([]);
       }
     }
-    fetchReviews()
+    fetchReviews();
   }, [id]);
+
+  useEffect(() => {
+    if (!id || user?.roleName !== 'Customer') { setCanReview(false); return; }
+    reviewApi.canReview(id)
+      .then(res => setCanReview(res.data?.canReview ?? false))
+      .catch(() => setCanReview(false));
+  }, [id, user]);
 
   if (!product) {
     return (
@@ -71,6 +81,23 @@ export default function ProductDetailPage() {
       });
     } catch {
       showToast('Có lỗi xảy ra', 'error');
+    }
+  };
+
+  const handleSubmitReview = async (values) => {
+  if (!user) { showToast('Vui lòng đăng nhập', 'warning'); return; }
+    setSubmittingReview(true);
+    try {
+      await reviewApi.create(id, { rating: values.rating, comment: values.comment });
+      reviewForm.resetFields();
+      setCanReview(false);
+      showToast('Đánh giá đã được gửi', 'success');
+      const res = await reviewApi.getByProduct(id);
+      setReviews(res.data || []);
+    } catch {
+      showToast('Bạn cần mua sản phẩm này trước khi đánh giá', 'error');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -183,6 +210,21 @@ export default function ProductDetailPage() {
           {/*Reviews */}
 
             <Card title={`Đánh giá từ khách hàng (${reviews.length})`}>
+              {/* Form gửi review — chỉ hiện với Customer đã đăng nhập */}
+              {canReview && (
+                <Form form={reviewForm} onFinish={handleSubmitReview} className="mb-6 pb-6 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Viết đánh giá của bạn</p>
+                  <Form.Item name="rating" rules={[{ required: true, message: 'Vui lòng chọn số sao' }]}>
+                    <Rate />
+                  </Form.Item>
+                  <Form.Item name="comment" rules={[{ max: 500, message: 'Tối đa 500 ký tự' }]}>
+                    <Input.TextArea rows={3} placeholder="Nhận xét của bạn (không bắt buộc)..." />
+                  </Form.Item>
+                  <Button type="primary" htmlType="submit" loading={submittingReview}>
+                    Gửi đánh giá
+                  </Button>
+                </Form>
+              )}
               {reviews.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
                   <div className="text-4xl mb-2">💬</div>
@@ -200,7 +242,7 @@ export default function ProductDetailPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{r.userName}</span>
                             <span className="text-xs text-gray-400 ml-auto">
-                              <span>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span> 
+                              <span>{new Date(r.createdDate).toLocaleDateString('vi-VN')}</span>
                             </span>
                           </div>
                           <Rate disabled value={r.rating} className="text-xs" />
