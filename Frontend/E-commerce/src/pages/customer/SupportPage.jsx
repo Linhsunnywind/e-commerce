@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Tabs, Form, Input, Button, Tag, Alert, Collapse, Card, Empty } from 'antd';
+import { useState, useEffect } from 'react';
+import { Tabs, Form, Input, Button, Tag, Alert, Collapse, Card, Empty, Spin } from 'antd';
 import { useAuth } from '../../context/AuthContext';
-import { supportTickets } from '../../data/mockData';
+import supportApi from '../../api/supportApi';
 
 const STATUS_MAP = {
-  open: { label: 'Chờ xử lý', color: 'orange' },
-  in_progress: { label: 'Đang xử lý', color: 'blue' },
-  resolved: { label: 'Đã giải quyết', color: 'green' },
+  Pending:    { label: 'Chờ xử lý',    color: 'orange' },
+  InProgress: { label: 'Đang xử lý',   color: 'blue'   },
+  Resolved:   { label: 'Đã giải quyết', color: 'green' },
 };
 
 const FAQ_ITEMS = [
@@ -20,14 +20,39 @@ const FAQ_ITEMS = [
 export default function SupportPage() {
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
   const [form] = Form.useForm();
 
-  const myTickets = user ? supportTickets.filter(t => t.customerEmail === user?.email) : supportTickets;
+  const loadTickets = async () => {
+    if (!user) return;
+    setLoadingTickets(true);
+    try {
+      const res = await supportApi.getMyTickets();
+      setTickets(res.data || []);
+    } catch {
+      setTickets([]);
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    form.resetFields();
-    setTimeout(() => setSubmitted(false), 3000);
+  useEffect(() => { loadTickets(); }, [user]);
+
+  const handleSubmit = async (values) => {
+    setSubmitting(true);
+    try {
+      await supportApi.create({ subject: values.subject, message: values.message });
+      setSubmitted(true);
+      form.resetFields();
+      await loadTickets();
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch {
+      // silent
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const tabItems = [
@@ -39,17 +64,19 @@ export default function SupportPage() {
           {submitted && (
             <Alert message="Yêu cầu đã được gửi! Chúng tôi sẽ phản hồi trong 24 giờ." type="success" showIcon className="mb-4" />
           )}
+          {!user && (
+            <Alert message="Vui lòng đăng nhập để gửi yêu cầu hỗ trợ." type="warning" showIcon className="mb-4" />
+          )}
           <Form form={form} layout="vertical" onFinish={handleSubmit} className="max-w-xl">
-            <Form.Item label="Mã đơn hàng (nếu có)" name="orderId">
-              <Input placeholder="VD: ORD-001" />
-            </Form.Item>
-            <Form.Item label="Chủ đề *" name="subject" rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Form.Item label="Chủ đề *" name="subject" rules={[{ required: true, message: 'Bắt buộc' }, { max: 200, message: 'Tối đa 200 ký tự' }]}>
               <Input placeholder="Mô tả ngắn vấn đề của bạn" />
             </Form.Item>
-            <Form.Item label="Nội dung chi tiết *" name="message" rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Form.Item label="Nội dung chi tiết *" name="message" rules={[{ required: true, message: 'Bắt buộc' }, { max: 2000, message: 'Tối đa 2000 ký tự' }]}>
               <Input.TextArea rows={5} placeholder="Mô tả chi tiết vấn đề bạn đang gặp phải..." />
             </Form.Item>
-            <Button type="primary" htmlType="submit">Gửi yêu cầu</Button>
+            <Button type="primary" htmlType="submit" loading={submitting} disabled={!user}>
+              Gửi yêu cầu
+            </Button>
           </Form>
         </Card>
       ),
@@ -57,29 +84,32 @@ export default function SupportPage() {
     {
       key: 'history',
       label: 'Lịch sử hỗ trợ',
-      children: myTickets.length === 0 ? (
-        <Empty description="Chưa có yêu cầu hỗ trợ nào" className="py-12" />
-      ) : (
-        <div className="flex flex-col gap-4">
-          {myTickets.map(ticket => (
-            <Card key={ticket.id} size="small">
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <div>
-                  <p className="font-semibold text-gray-800">{ticket.subject}</p>
-                  <p className="text-xs text-gray-500">{ticket.createdAt}{ticket.orderId && ` · Đơn #${ticket.orderId}`}</p>
-                </div>
-                <Tag color={STATUS_MAP[ticket.status].color}>{STATUS_MAP[ticket.status].label}</Tag>
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{ticket.message}</p>
-              {ticket.response && (
-                <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded">
-                  <p className="text-xs font-semibold text-gray-700 mb-1">Phản hồi từ {ticket.assignedTo}:</p>
-                  <p className="text-sm text-gray-600">{ticket.response}</p>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
+      children: (
+        <Spin spinning={loadingTickets}>
+          {tickets.length === 0 ? (
+            <Empty description="Chưa có yêu cầu hỗ trợ nào" className="py-12" />
+          ) : (
+            <div className="flex flex-col gap-4">
+              {tickets.map(ticket => {
+                const s = STATUS_MAP[ticket.status] ?? { label: ticket.status, color: 'default' };
+                return (
+                  <Card key={ticket.id} size="small">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <p className="font-semibold text-gray-800">{ticket.subject}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(ticket.createdDate).toLocaleDateString('vi-VN')}
+                        </p>
+                      </div>
+                      <Tag color={s.color}>{s.label}</Tag>
+                    </div>
+                    <p className="text-sm text-gray-600">{ticket.message}</p>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </Spin>
       ),
     },
     {

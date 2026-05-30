@@ -30,9 +30,9 @@ namespace E_commerce.Repositories
         public async Task<Product?> GetProductById(Guid productId)
         {
             return await _context.Products
-                .Include(p => p.Reviews)
-                    .ThenInclude(r => r.User)
-                .FirstOrDefaultAsync(p => p.Id == productId);
+            .Include(p => p.Reviews)
+                .ThenInclude(r => r.User)
+            .FirstOrDefaultAsync(p => p.Id == productId);
         }
 
         public async Task<Review?> GetReviewById(Guid reviewId)
@@ -61,6 +61,20 @@ namespace E_commerce.Repositories
         public async Task SaveChanges()
         {
             await _context.SaveChangesAsync();
+        }
+        public async Task<bool> HasUserPurchasedProduct(Guid userId, Guid productId)
+        {
+            return await _context.OrderDetails
+                .AnyAsync(od =>
+                    od.Order.UserId == userId &&
+                    od.Order.Status == OrderStatus.Delivered &&
+                    od.ProductVariant.ProductId == productId);
+        }
+
+        public async Task<Review?> GetUserReviewForProduct(Guid userId, Guid productId)
+        {
+            return await _context.Reviews
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ProductId == productId);
         }
     }
 }

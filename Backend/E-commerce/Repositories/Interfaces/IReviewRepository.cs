@@ -17,5 +17,7 @@ namespace E_commerce.Repositories.Interfaces
         Task<double> CalculateAverageRating(Guid productId);
 
         Task SaveChanges();
+        Task<bool> HasUserPurchasedProduct(Guid userId, Guid productId);
+        Task<Review?> GetUserReviewForProduct(Guid userId, Guid productId);
     }
 }

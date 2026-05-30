@@ -39,27 +39,37 @@ namespace E_commerce.Services
         // Order Statistics
         public async Task<List<OrderStatistics>> GetOrderStatisticsAsync()
         {
+            var statusLabels = new Dictionary<OrderStatus, string>
+            {
+                { OrderStatus.Pending,    "Chờ xử lý" },
+                { OrderStatus.Processing, "Đang xử lý" },
+                { OrderStatus.Shipped,    "Đang giao" },
+                { OrderStatus.Delivered,  "Đã giao" },
+                { OrderStatus.Cancelled,  "Đã hủy" },
+            };
             var data = await _context.Orders
-         .GroupBy(o => o.Status)
-         .Select(g => new
-         {
-             Status = g.Key,
-             Count = g.Count(),
-             TotalRevenue = g.Sum(x => x.TotalAmount),
-             AverageOrderValue = g.Average(x => x.TotalAmount)
-         })
-         .ToListAsync();
+            .GroupBy(o => o.Status)
+            .Select(g => new
+            {
+                Status = g.Key,
+                Count = g.Count(),
+                TotalRevenue = g.Sum(x => x.TotalAmount),
+                AverageOrderValue = g.Average(x => x.TotalAmount)
+            })
+            .ToListAsync();
 
-            return data
-                .Select(x => new OrderStatistics
+        return statusLabels.Keys.Select(status =>
+            {
+                var found = data.FirstOrDefault(d => d.Status == status);
+                return new OrderStatistics
                 {
-                    Status = x.Status.ToString(),
-                    Count = x.Count,
-                    TotalRevenue = x.TotalRevenue,
-                    AverageOrderValue = x.AverageOrderValue
-                })
-                .OrderBy(x => x.Status)
-                .ToList();
+                    Status = statusLabels[status],
+                    Count = found?.Count ?? 0,
+                    TotalRevenue = found?.TotalRevenue ?? 0,
+                    AverageOrderValue = found?.AverageOrderValue ?? 0
+                };
+            }).ToList();
+
         }
 
         // Top Customers

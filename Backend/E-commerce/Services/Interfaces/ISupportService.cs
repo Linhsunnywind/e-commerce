@@ -10,5 +10,6 @@ namespace E_commerce.Services.Interfaces
         Task<SupportRequestResponseDto> CreateTicketAsync(Guid userId, CreateSupportRequestDto dto);
         Task<IEnumerable<SupportRequestResponseDto>> GetTicketsByUserIdAsync(Guid userId);
         Task<IEnumerable<SupportRequestResponseDto>> GetAllTicketsAsync(string? status);
+        Task<SupportRequestResponseDto> UpdateTicketStatusAsync(Guid ticketId, string status);
     }
 }

@@ -66,6 +66,32 @@ namespace E_commerce.Services
                 .ToListAsync();
         }
 
+        public async Task<SupportRequestResponseDto> UpdateTicketStatusAsync(Guid ticketId, string status)
+        {
+            var validStatuses = new[] { "Pending", "InProgress", "Resolved" };
+            if (!validStatuses.Contains(status))
+                throw new ArgumentException($"Invalid status: {status}");
+
+            var ticket = await _context.SupportRequests
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == ticketId)
+                ?? throw new KeyNotFoundException("Ticket not found");
+
+            ticket.Status = status;
+            await _context.SaveChangesAsync();
+
+            return new SupportRequestResponseDto
+            {
+                Id = ticket.Id,
+                UserId = ticket.UserId,
+                CustomerName = ticket.User?.FullName ?? "Unknown",
+                Subject = ticket.Subject,
+                Message = ticket.Message,
+                Status = ticket.Status,
+                CreatedDate = ticket.CreatedDate
+            };
+        }
+
         public async Task<IEnumerable<SupportRequestResponseDto>> GetAllTicketsAsync(string? status)
         {
             var query = _context.SupportRequests.Include(s => s.User).AsQueryable();

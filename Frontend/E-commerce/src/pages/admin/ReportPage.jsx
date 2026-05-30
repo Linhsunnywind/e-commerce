@@ -1,78 +1,67 @@
+import { useState, useEffect } from 'react';
 import { Card, Table } from 'antd';
-import { revenueByMonth, dashboardStats, formatPrice } from '../../data/mockData';
+import reportApi from '../../api/reportApi';
+
+const formatPrice = p => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(p);
 
 export default function ReportPage() {
-  const s = dashboardStats;
-  const maxRev = Math.max(...revenueByMonth.map(r => r.revenue));
-  const totalRevenue = revenueByMonth.reduce((sum, r) => sum + r.revenue, 0);
-  const totalOrders = revenueByMonth.reduce((sum, r) => sum + r.orders, 0);
+  const [revenue, setRevenue] = useState(null);
+  const [orderStats, setOrderStats] = useState([]);
+  const [topCustomers, setTopCustomers] = useState([]);
+
+  useEffect(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1).toISOString();
+    const end = now.toISOString();
+    reportApi.getRevenue({ params: { startDate: start, endDate: end } })
+      .then(res => setRevenue(res.data))
+      .catch(() => {});
+    reportApi.getOrders().then(res => setOrderStats(res.data || []));
+    reportApi.getCustomers().then(res => setTopCustomers(res.data || []));
+  }, []);
 
   const summaryStats = [
-    { icon: '💰', label: 'Tổng doanh thu (năm 2024)', value: formatPrice(totalRevenue), color: '#2563eb' },
-    { icon: '🛒', label: 'Tổng đơn hàng (năm 2024)', value: totalOrders, color: '#10b981' },
-    { icon: '💡', label: 'Doanh thu trung bình / tháng', value: formatPrice(Math.round(totalRevenue / revenueByMonth.length)), color: '#f59e0b' },
+    { icon: '💰', label: `Doanh thu năm ${new Date().getFullYear()}`, value: formatPrice(revenue?.totalRevenue || 0) },
+    { icon: '🛒', label: 'Tổng đơn hàng', value: revenue?.totalOrders || orderStats.reduce((s,o)=>s+o.count,0) },
+    { icon: '💡', label: 'Trung bình / đơn', value: formatPrice(revenue?.totalOrders ? (revenue.totalRevenue / revenue.totalOrders) : 0) },
   ];
 
-  const monthlyColumns = [
-    { title: 'Tháng', dataIndex: 'month', key: 'month' },
-    { title: 'Đơn hàng', dataIndex: 'orders', key: 'orders', render: v => <span className="font-semibold">{v}</span> },
-    { title: 'Khách mới', dataIndex: 'customers', key: 'customers' },
-    { title: 'TB đơn', key: 'avg', render: (_, r) => formatPrice(Math.round(r.revenue / r.orders)) },
+  const orderCols = [
+    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: v => <span className="font-medium">{v}</span> },
+    { title: 'Số đơn', dataIndex: 'count', key: 'count', render: v => <span className="font-semibold">{v}</span> },
+    { title: 'Doanh thu', dataIndex: 'totalRevenue', key: 'rev', render: v => <span className="text-blue-600">{formatPrice(v)}</span> },
+    { title: 'TB / đơn', dataIndex: 'averageOrderValue', key: 'avg', render: v => formatPrice(v) },
   ];
-
-  const topProductsColumns = [
-    { title: '#', key: 'rank', width: 40, render: (_, __, i) => (
+  const custCols = [
+    { title: '#', key: 'r', width: 40, render: (_, __, i) => (
       <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">{i+1}</div>
     )},
-    { title: 'Sản phẩm', dataIndex: 'name', key: 'name', render: v => <span className="font-medium">{v}</span> },
-    { title: 'Số lượng bán', dataIndex: 'sold', key: 'sold', render: v => `${v} sản phẩm` },
-    { title: 'Doanh thu', dataIndex: 'revenue', key: 'revenue', render: v => <span className="text-blue-600 font-semibold">{formatPrice(v)}</span> },
+    { title: 'Khách hàng', dataIndex: 'customerName', key: 'name', render: v => <span className="font-medium">{v}</span> },
+    { title: 'Email', dataIndex: 'email', key: 'email', render: v => <span className="text-sm text-gray-500">{v}</span> },
+    { title: 'Số đơn', dataIndex: 'orderCount', key: 'orders' },
+    { title: 'Chi tiêu', dataIndex: 'totalSpent', key: 'spent', render: v => <span className="text-blue-600 font-semibold">{formatPrice(v)}</span> },
   ];
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-3 gap-4 md:grid-cols-1">
-        {summaryStats.map(stat => (
-          <Card key={stat.label}>
+      <div className="grid grid-cols-3 gap-4">
+        {summaryStats.map(s => (
+          <Card key={s.label}>
             <div className="flex items-center gap-4">
-              <div className="w-13 h-13 rounded-xl flex items-center justify-center text-2xl" style={{ background: stat.color + '18', width: 52, height: 52 }}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-xl font-bold text-gray-800">{stat.value}</p>
-              </div>
+              <div className="text-3xl">{s.icon}</div>
+              <div><p className="text-sm text-gray-500">{s.label}</p><p className="text-xl font-bold">{s.value}</p></div>
             </div>
           </Card>
         ))}
       </div>
-
       <div className="grid grid-cols-2 gap-5 md:grid-cols-1">
-        <Card title="Doanh thu theo tháng">
-          <div className="flex flex-col">
-            {revenueByMonth.map(r => {
-              const pct = (r.revenue / maxRev) * 100;
-              return (
-                <div key={r.month} className="flex items-center gap-3 py-1.5">
-                  <span className="text-xs text-gray-500 w-10 flex-shrink-0">{r.month}</span>
-                  <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="rev-bar-fill h-full" style={{ width: pct + '%' }} />
-                  </div>
-                  <span className="text-xs font-medium text-gray-700 w-24 text-right">{formatPrice(r.revenue)}</span>
-                </div>
-              );
-            })}
-          </div>
+        <Card title="Thống kê theo trạng thái đơn hàng">
+          <Table columns={orderCols} dataSource={orderStats} rowKey="status" pagination={false} size="small" />
         </Card>
-
-        <Card title="Đơn hàng & Khách hàng mới">
-          <Table columns={monthlyColumns} dataSource={revenueByMonth} rowKey="month" pagination={false} size="small" />
+        <Card title="Top khách hàng chi tiêu nhiều nhất">
+          <Table columns={custCols} dataSource={topCustomers} rowKey="customerId" pagination={false} size="small" />
         </Card>
       </div>
-
-      <Card title="Top sản phẩm bán chạy">
-        <Table columns={topProductsColumns} dataSource={s.topProducts} rowKey="productId" pagination={false} size="small" />
-      </Card>
     </div>
   );
 }

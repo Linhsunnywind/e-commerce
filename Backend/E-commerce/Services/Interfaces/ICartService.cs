@@ -19,5 +19,8 @@ namespace E_commerce.Services.Interfaces
 
         // Xóa toàn bộ cart
         Task<bool> ClearCartAsync(Guid userId);
+
+        // Xóa các item theo danh sách id
+        Task RemoveItemsByIdsAsync(List<Guid> itemIds);
     }
 }

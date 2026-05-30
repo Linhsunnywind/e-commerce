@@ -1,4 +1,5 @@
 ﻿using E_commerce.DTOs.Login;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,11 +27,11 @@ namespace E_commerce.Controllers.LoginController
             var result = await _loginService.LoginAsync(dto);
             if (result.IsSuccess)
             {
-                return Ok(result);
+                return Ok(BaseResponse<LoginResponse>.Ok(result.Data, result.Message));
             }
             else
             {
-                return BadRequest(result);
+                return Unauthorized(BaseResponse<LoginResponse>.Fail(result.Message, 401));
             }
         }
     }

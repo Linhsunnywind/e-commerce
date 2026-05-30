@@ -37,12 +37,27 @@ namespace E_commerce.Services
                 })
                 .ToList();
         }
+        public Task<bool> HasUserPurchasedProduct(Guid userId, Guid productId)
+            => _reviewRepository.HasUserPurchasedProduct(userId, productId);
+
+        public Task<bool> HasUserReviewed(Guid userId, Guid productId)
+            => _reviewRepository.GetUserReviewForProduct(userId, productId)
+                .ContinueWith(t => t.Result != null);
 
         public async Task<BaseResponse<string>> CreateReview(
             Guid productId,
             Guid userId,
             CreateReviewRequest request)
         {
+            var hasPurchased = await _reviewRepository.HasUserPurchasedProduct(userId, productId);
+            if (!hasPurchased)
+                return BaseResponse<string>.Fail("You must purchase this product before reviewing", 403);
+
+            // Check đã review chưa
+            var existingReview = await _reviewRepository.GetUserReviewForProduct(userId, productId);
+            if (existingReview != null)
+                return BaseResponse<string>.Fail("You have already reviewed this product", 400);
+            
             var product = await _reviewRepository
                 .GetProductById(productId);
 

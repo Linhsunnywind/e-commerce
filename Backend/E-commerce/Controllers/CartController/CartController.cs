@@ -1,4 +1,5 @@
 ﻿using E_commerce.DTOs.Cart;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,9 +30,9 @@ namespace E_commerce.Controllers
             var cart = await _cartService.GetCartAsync(userId);
 
             if (cart == null)
-                return NotFound("Cart not found");
+                return NotFound(BaseResponse<CartResponse>.Fail("Cart not found", 404));
 
-            return Ok(cart);
+            return Ok(BaseResponse<CartResponse>.Ok(cart));
         }
 
         // POST: /api/cart/items
@@ -45,9 +46,9 @@ namespace E_commerce.Controllers
             var result = await _cartService.AddItemAsync(userId, dto);
 
             if (!result)
-                return BadRequest("Cannot add item");
+                return BadRequest(BaseResponse<string>.Fail("Cannot add item"));
 
-            return Ok("Add item successfully");
+            return Ok(BaseResponse<string>.Ok(null, "Add item successfully"));
         }
 
         // PUT: /api/cart/items/{id}
@@ -57,9 +58,8 @@ namespace E_commerce.Controllers
             var result = await _cartService.UpdateItemAsync(dto);
 
             if (!result)
-                return BadRequest("Cannot update item");
-
-            return Ok("Update item successfully");
+                return BadRequest(BaseResponse<string>.Fail("Cannot update item"));
+            return Ok(BaseResponse<string>.Ok(null, "Update item successfully"));
         }
 
         // DELETE: /api/cart/items/{id}
@@ -69,7 +69,7 @@ namespace E_commerce.Controllers
             var result = await _cartService.DeleteItemAsync(productVariantId);
 
             if (!result)
-                return NotFound("Cart item not found");
+                return NotFound(BaseResponse<string>.Fail("Cart item not found", 404));
 
             return NoContent();
         }

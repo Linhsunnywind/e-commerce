@@ -1,4 +1,5 @@
 ﻿using E_commerce.DTOs.Auth;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,11 +29,11 @@ namespace E_commerce.Controllers.AuthController
 
             if (result.IsSuccess)
             {
-                return Ok(result);
+                return Ok(BaseResponse<UserInfoResponse>.Ok(result.Data, result.Message));
             }
             else
             {
-                return BadRequest(result);
+                return BadRequest(BaseResponse<UserInfoResponse>.Fail(result.Message));
             }
         }
     }

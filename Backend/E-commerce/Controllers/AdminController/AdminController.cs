@@ -1,3 +1,5 @@
+using E_commerce.DTOs.Admin;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace E_commerce.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/admins")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
@@ -22,7 +24,7 @@ namespace E_commerce.Controllers
         public async Task<IActionResult> GetCustomers()
         {
             var customers = await _adminService.GetUsersByRoleAsync("Customer");
-            return Ok(customers);
+            return Ok(BaseResponse<IEnumerable<UserListResponseDto>>.Ok(customers));
         }
 
         // GET /api/admin/staff
@@ -30,7 +32,7 @@ namespace E_commerce.Controllers
         public async Task<IActionResult> GetStaff()
         {
             var staff = await _adminService.GetUsersByRoleAsync("Staff");
-            return Ok(staff);
+            return Ok(BaseResponse<IEnumerable<UserListResponseDto>>.Ok(staff));
         }
     }
 }

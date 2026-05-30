@@ -1,4 +1,5 @@
 using E_commerce.DTOs.SupportRequest;
+using E_commerce.Helpers;
 using E_commerce.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace E_commerce.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/supports")]
     [ApiController]
     public class SupportController : ControllerBase
     {
@@ -28,7 +29,7 @@ namespace E_commerce.Controllers
                 return Unauthorized();
 
             var result = await _supportService.CreateTicketAsync(userId, dto);
-            return Ok(result);
+           return Ok(BaseResponse<SupportRequestResponseDto>.Ok(result));
         }
 
         // GET /api/support — Customer
@@ -41,7 +42,27 @@ namespace E_commerce.Controllers
                 return Unauthorized();
 
             var results = await _supportService.GetTicketsByUserIdAsync(userId);
-            return Ok(results);
+            return Ok(BaseResponse<IEnumerable<SupportRequestResponseDto>>.Ok(results));
+        }
+
+        // PATCH /api/supports/{id}/status — Staff, Admin
+        [HttpPatch("{id}/status")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateSupportStatusDto dto)
+        {
+            try
+            {
+                var result = await _supportService.UpdateTicketStatusAsync(id, dto.Status);
+                return Ok(BaseResponse<SupportRequestResponseDto>.Ok(result));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(BaseResponse<string>.Fail(ex.Message, 404));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(BaseResponse<string>.Fail(ex.Message, 400));
+            }
         }
 
         // GET /api/support/all — Staff, Admin
@@ -50,7 +71,7 @@ namespace E_commerce.Controllers
         public async Task<IActionResult> GetAllTickets([FromQuery] string? status)
         {
             var results = await _supportService.GetAllTicketsAsync(status);
-            return Ok(results);
+            return Ok(BaseResponse<IEnumerable<SupportRequestResponseDto>>.Ok(results));
         }
     }
 }

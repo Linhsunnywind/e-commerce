@@ -1,4 +1,4 @@
-# 🛒 E-Commerce Project
+# 🛒 Techshop Project
 
 Hệ thống thương mại điện tử được xây dựng với **React**, **ASP.NET Core Web API** và **Microsoft SQL Server**.
 
@@ -10,7 +10,7 @@ Hệ thống thương mại điện tử được xây dựng với **React**, *
 |------|-----------|
 | Frontend | React (JavaScript), Vite |
 | Backend | ASP.NET Core Web API (.NET 8) |
-| Database | Microsoft SQL Server |
+| Database | Microsoft SQL Server, Cloudinary | 
 | ORM | Entity Framework Core |
 | Authentication | JWT |
 | Version Control | Git / GitHub |
@@ -42,8 +42,8 @@ E-commerce/
 │   ├── appsettings.json
 │   └── Program.cs
 │
-└── Database/                ← Script SQL
-    └── init.sql             ← Tạo database & bảng
+└── Database/                
+    └── E-commerce.bak             
 ```
 
 ---
@@ -62,7 +62,7 @@ E-commerce/
 ### 1. Clone project
 
 ```bash
-git clone https://github.com/ten-nhom/ten-repo.git
+git clone https://github.com/truongvan25/e-commerce.git
 cd E-commerce
 ```
 
@@ -70,8 +70,7 @@ cd E-commerce
 
 ### 2. Tạo Database
 
-Mở **SSMS** → kết nối SQL Server → mở file `Database/init.sql` → nhấn **F5** để chạy.
-
+Mở **SSMS** → kết nối SQL Server → restore file `Database/E-commerce.bak` 
 ---
 
 ### 3. Cấu hình Backend
@@ -92,7 +91,15 @@ Mở file `Backend/E-commerce/appsettings.json`, sửa connection string theo m�
 }
 ```
 
-> ⚠️ **Lưu ý:** Mỗi người tự sửa file này theo máy mình. **Không commit `appsettings.json` lên GitHub.**
+Thông tin Cloudinary đã cấu hình sẵn trong appsettings.json. Nếu muốn dùng account riêng, đổi 3 giá trị:
+
+```json
+"Cloudinary": {
+  "CloudName": "your-cloud-name",
+  "ApiKey": "your-api-key",
+  "ApiSecret": "your-api-secret"
+} 
+```
 
 ---
 
@@ -112,13 +119,26 @@ Swagger UI: `https://localhost:7020/swagger`
 
 ### 5. Chạy Frontend
 
+Cấu hình biến môi trường
+
+cd Frontend/E-commerce
+
+copy nội dung file  .env.example vào file .env tạo mới
+File .env mặc định:
+
+VITE_API_URL=https://localhost:7270/api
+
+Không cần thay đổi nếu backend chạy đúng port mặc định.
+
+Cài dependencies và chạy
+
 ```bash
 cd Frontend/E-commerce
 npm install
 npm run dev
 ```
 
-Frontend chạy tại: `http://localhost:3000`
+Frontend chạy tại: `http://localhost:5173`
 
 ---
 

@@ -22,7 +22,7 @@ export default function AdminSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   return (
-    <aside className="w-60 min-h-screen bg-gray-900 fixed left-0 top-0 z-50 flex flex-col">
+    <aside className="w-60 h-screen bg-gray-900 fixed left-0 top-0 z-50 flex flex-col overflow-y-auto">
       <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-700">
         <span className="text-2xl">🛒</span>
         <div>
@@ -31,7 +31,7 @@ export default function AdminSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-2 py-3 flex flex-col gap-0.5">
+      <nav className="flex-1 px-2 py-3 flex flex-col gap-0.5 ">
         {NAV.map(item => (
           <NavLink
             key={item.to}
@@ -62,13 +62,13 @@ export default function AdminSidebar() {
         </div>
         <button
           onClick={() => navigate('/')}
-          className="w-full flex items-center gap-2 text-gray-300 hover:text-white text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-2 !text-gray-300 hover:text-white text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
         >
           <GlobalOutlined /> Website
         </button>
         <button
           onClick={() => { logout(); navigate('/login'); }}
-          className="w-full flex items-center gap-2 text-red-400 hover:text-red-300 text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-2 !text-red-400 hover:text-red-300 text-sm py-1.5 px-2 rounded hover:bg-gray-800 transition-colors "
         >
           <LogoutOutlined /> Đăng xuất
         </button>

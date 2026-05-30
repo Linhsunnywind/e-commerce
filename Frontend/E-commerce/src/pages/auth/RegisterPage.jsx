@@ -2,19 +2,31 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Alert } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, LockOutlined } from '@ant-design/icons';
+import { useAuth } from '../../context/AuthContext';  
 
 export default function RegisterPage() {
+  const {register} = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     if (values.password !== values.confirm) {
       setError('Mật khẩu xác nhận không khớp');
       return;
     }
-    alert('Đăng ký thành công! (demo - chưa kết nối backend)');
-    navigate('/login');
+    setLoading(true);
+    setError("");
+    const result = await register(values.name, values.email, values.phone, values.password);
+    
+    setLoading(false);
+    console.log(result);
+    if (result.ok) {
+      navigate('/login');
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
@@ -35,16 +47,16 @@ export default function RegisterPage() {
           <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}>
             <Input prefix={<MailOutlined />} placeholder="email@example.com" />
           </Form.Item>
-          <Form.Item label="Số điện thoại" name="phone" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
+          <Form.Item label="Số điện thoại" name="phone" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }, { pattern: /^\d{10}$/, message: 'Số điện thoại phải đúng 10 chữ số' }]}>
             <Input prefix={<PhoneOutlined />} placeholder="09xxxxxxxx" />
           </Form.Item>
-          <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}>
+          <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Tối thiểu 6 ký tự' }, { pattern: /^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])/, message: 'Phải có chữ hoa, số và ký tự đặc biệt' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="Tối thiểu 6 ký tự" />
           </Form.Item>
           <Form.Item label="Xác nhận mật khẩu" name="confirm" rules={[{ required: true, message: 'Vui lòng xác nhận mật khẩu' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" block className="h-11 font-semibold">
+          <Button type="primary" htmlType="submit" block loading={loading} className="h-11 font-semibold">
             Đăng ký
           </Button>
         </Form>

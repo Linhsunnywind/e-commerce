@@ -22,6 +22,7 @@ namespace E_commerce.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<SupportRequest> SupportRequests { get; set; }
+        public DbSet<ShippingAddress> ShippingAddresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,6 +83,14 @@ namespace E_commerce.Data
                 .HasOne(p => p.Product)
                 .WithMany(p => p.ProductImages)
                 .HasForeignKey(pi => pi.ProductId);
+
+            modelBuilder.Entity<ProductImage>()
+                .Property(p => p.ProductImageId)
+                .ValueGeneratedNever();
+
+            modelBuilder.Entity<ProductVariant>()
+                .Property(p => p.Id)
+                .ValueGeneratedNever();
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
@@ -148,6 +157,18 @@ namespace E_commerce.Data
                 .WithOne(o => o.SupportRequest)
                 .HasForeignKey<SupportRequest>(sr => sr.OrderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ShippingAddress>()
+                .HasOne(sa => sa.User)
+                .WithMany()
+                .HasForeignKey(sa => sa.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Name = "Admin" },
+                new Role { Id = Guid.Parse("00000000-0000-0000-0000-000000000002"), Name = "Staff" },
+                new Role { Id = Guid.Parse("00000000-0000-0000-0000-000000000003"), Name = "Customer" }
+            );
 
         }
     }

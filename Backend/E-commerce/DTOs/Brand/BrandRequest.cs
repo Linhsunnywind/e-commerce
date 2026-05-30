@@ -1,7 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace E_commerce.DTOs.Brand
 {
     public class BrandRequest
     {
-        public string Name { get; set; }
+        [Required(ErrorMessage = "Brand name is required.")]
+        [StringLength(100, MinimumLength = 1)]
+        public string Name { get; set; } = null!;
     }
 }

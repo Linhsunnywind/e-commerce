@@ -17,8 +17,13 @@ namespace E_commerce.Services
 
         public async Task<List<CategoryResponse>> GetCategories()
         {
-            return await _context
-                .Categories.Select(c => new CategoryResponse { Id = c.Id, Name = c.Name })
+            return await _context.Categories
+                .Where(c => !c.IsDeleted)
+                .Select(c => new CategoryResponse
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
                 .ToListAsync();
         }
 
@@ -63,7 +68,7 @@ namespace E_commerce.Services
             if (category == null)
                 throw new KeyNotFoundException("Category not found.");
 
-            _context.Categories.Remove(category);
+            category.IsDeleted = true;
 
             await _context.SaveChangesAsync();
         }
